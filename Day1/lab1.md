@@ -92,5 +92,22 @@ Eg: to view standard cells:
 <img width="1121" height="841" alt="image" src="https://github.com/user-attachments/assets/4463cdb1-91f7-49fb-8ab7-bc0ae2f0f6e7" />
 
 
+2. Magic:
+
+2A. check the sky130 at the top to know which technology file the tool has opened. It says skywater130
+
+<img width="1917" height="789" alt="image" src="https://github.com/user-attachments/assets/b90261de-245b-479c-846a-09df515e90b8" />
+
+2B. pyrographic rendering view more accelerated colors:
+
+$ spice -d XR
+
+<img width="1849" height="968" alt="image" src="https://github.com/user-attachments/assets/6301e3f0-c159-4990-8ff6-0734332f3ad4" />
+
+2C. Keys to use / shortcuts:
+
+   1. ctrl + z = zoom-out to center
+   2. 
 -----------------------------------------------------------------------------------------------------------------------------------------
+
 
