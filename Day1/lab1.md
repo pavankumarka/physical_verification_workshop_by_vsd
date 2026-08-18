@@ -10,6 +10,12 @@
 
    <img width="1796" height="906" alt="image" src="https://github.com/user-attachments/assets/1120a9f7-f7b3-4218-938e-d73a62e7fb48" />
 
+1C. Other magic commands:
+
+      1. magic -noconsole   // to run without graphics window
+
+      2. magic -dnull -noconsole    // to call magic to run from script
+
 ## 2. netgen
 
 2A. start netgen
@@ -20,6 +26,9 @@
 
 <img width="859" height="553" alt="image" src="https://github.com/user-attachments/assets/fa5b16d5-3f21-4c50-9ab6-bb894c8ae0dd" />
 
+2C. Other netgen commands:
+
+      1. netgen -noconsole   // to run without graphics window
 
 ## 3. xschem
 
@@ -41,4 +50,47 @@
 
 <img width="744" height="449" alt="image" src="https://github.com/user-attachments/assets/4a2991d6-94c0-44c7-800a-cff389159115" />
 
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+
+## calling tcl script from tools
+
+<img width="718" height="375" alt="image" src="https://github.com/user-attachments/assets/7e75fdbb-976d-4fa6-8f0f-a9b14b8c12dc" />
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+
+## Tools purpose: 
+
+these steps are run for electrical and mechanical devices.
+
+1. xschem: to create schematic, for simulated, Export from xschem to magic to create the layout.
+
+2. magic to finish the layout, extract the netlist from magic and simulating it.
+
+3. run lvs to compare schematic and layout.
+   
+-----------------------------------------------------------------------------------------------------------------------------------------
+
+## Create New Project directory structure and link SkyWater130 PDK with PV tools
+
+<img width="1091" height="473" alt="image" src="https://github.com/user-attachments/assets/6ed35f05-d90a-484a-8340-cd0ed01d8578" />
+
+
+#### Test the PV tools for link with PDK:
+
+1. xschem: this will open all table of lots of schematics, introduces to sky130 devices.
+
+<img width="1749" height="781" alt="image" src="https://github.com/user-attachments/assets/f0456a26-ba65-44af-88c5-a166c08b9e12" />
+
+shortcuts:
+
+1.1 use mouse scrolling to Zoom-in / zoom-out.
+1.2 press "e" to enter, "ctrl + e" to exit.
+
+Eg: to view standard cells:
+
+<img width="1121" height="841" alt="image" src="https://github.com/user-attachments/assets/4463cdb1-91f7-49fb-8ab7-bc0ae2f0f6e7" />
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------
 
