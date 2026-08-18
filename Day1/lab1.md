@@ -107,7 +107,29 @@ $ spice -d XR
 2C. Keys to use / shortcuts:
 
    1. ctrl + z = zoom-out to center
-   2. 
+   2. mouse center button or press "p" to select the layer of material from right hand side boxes
+
+Eg: poly is selected
+
+<img width="1599" height="882" alt="image" src="https://github.com/user-attachments/assets/8dbb3153-9c1d-44a9-a00b-8e93be908209" />
+
+   3. click the mouse right button to select the area, 
+   
+   click mouse center button to select type of material,
+
+   select area click on empty space to delete/erase the layer of material
+
+<img width="1546" height="884" alt="image" src="https://github.com/user-attachments/assets/002e5e55-8215-4955-a0f3-b472a2ca9404" />
+
+   4. click on devices1 and make changes if required.
+
+<img width="1770" height="920" alt="image" src="https://github.com/user-attachments/assets/b55467c2-0d9f-4fd7-ae28-f8dcc3461df9" />
+
+   5. without guard ring
+
+<img width="1739" height="937" alt="image" src="https://github.com/user-attachments/assets/bdeac75c-6849-4b4a-84d5-86251156a0f4" />
+
+   
 -----------------------------------------------------------------------------------------------------------------------------------------
 
 
