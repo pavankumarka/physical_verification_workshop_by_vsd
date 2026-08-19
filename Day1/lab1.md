@@ -322,13 +322,37 @@ To remove unwanted files:
 
 <img width="927" height="831" alt="image" src="https://github.com/user-attachments/assets/d4a43d5e-9115-4c9c-b7ae-7ab83810c7e6" />
 
+5. LVS check:
 
+<img width="936" height="327" alt="image" src="https://github.com/user-attachments/assets/52b90432-ae23-4519-b584-4dd6c8b6062d" />
 
+<img width="738" height="906" alt="image" src="https://github.com/user-attachments/assets/53d3926f-58ca-4ad7-9128-76f739e32d3a" />
 
+NOTE: DRC is week with magic.
 
+6. Capacitance extraction:
 
+run following commands from mag folder:
 
+<img width="1434" height="909" alt="image" src="https://github.com/user-attachments/assets/3b942462-d18e-4d24-8f97-08c699e048cc" />
 
+list of capacitances inside inverter:
+
+<img width="921" height="898" alt="image" src="https://github.com/user-attachments/assets/bad293ab-1613-4267-900c-22f623913ec2" />
+
+7. Simulate using testbench:
+
+copy the files xschem/inverter_tb.spice to mag folder and edit
+
+<img width="1662" height="894" alt="image" src="https://github.com/user-attachments/assets/111fb908-0878-4b5c-a51f-1e0b2541d7e6" />
+
+8. Layout extracted netlist
+
+<img width="720" height="551" alt="image" src="https://github.com/user-attachments/assets/b0f7562f-a667-4c71-9e54-e452ff9571ec" />
+
+Same as earliest simulation wrt vtg
+
+<img width="1588" height="926" alt="image" src="https://github.com/user-attachments/assets/8ec51460-09c3-4156-b0df-30ce49ac3ba2" />
 
 -----------------------------------------------------------------------------------------------------------------------------------------
 
