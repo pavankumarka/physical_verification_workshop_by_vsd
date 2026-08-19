@@ -22,7 +22,8 @@ Overall, the repository provides practical experience with **open-source physica
 
 
 
-<img width="1536" height="1024" alt="ChatGPT Image Jul 2, 2026, 05_50_54 PM" src="https://github.com/user-attachments/assets/a0acdbdd-cd1a-491f-ab72-56ea50cc1e8d" />
+<img width="1024" height="1536" alt="ChatGPT Image Aug 19, 2026, 06_27_11 PM" src="https://github.com/user-attachments/assets/6ffd7ce5-3338-4958-9771-06931399712d" />
+
 
 
  
@@ -33,6 +34,7 @@ Overall, the repository provides practical experience with **open-source physica
 |----------|------|----------|
 | PDK | SKY130A | Open-source Process Design Kit |
 | Layout Editor | Magic VLSI | Layout creation, DRC and extraction |
+| Schematic | xschem | schematic creation |
 | LVS Tool | Netgen | Layout Versus Schematic verification |
 | Physical Design | OpenLane | RTL-to-GDSII automated flow |
 | Simulator | NGSPICE | Circuit simulation and analysis |
