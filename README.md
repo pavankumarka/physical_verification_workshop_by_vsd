@@ -4,7 +4,7 @@ This repository presents a hands-on **Physical Verification (PV) workshop** base
 
 The workshop progresses through multiple learning modules covering **Design Rule Checking (DRC), Layout Versus Schematic (LVS), parasitic extraction, hierarchy management, GDSII generation, density verification, antenna analysis, Electrical Rule Checking (ERC), and tapeout sign-off concepts**.
 
-The training combines fundamental concepts with practical implementation using **Magic VLSI, Netgen, OpenLane, and the SKY130 PDK**. Each module includes verification procedures, command references, debugging methodologies, screenshots, and detailed analysis of verification reports. The repository demonstrates how physical design data is systematically validated for **manufacturability, electrical connectivity, design-rule compliance, and overall tapeout readiness**.
+The training combines fundamental concepts with practical implementation using **Magic VLSI, xschem, Netgen, OpenLane, and the SKY130 PDK**. Each module includes verification procedures, command references, debugging methodologies, screenshots, and detailed analysis of verification reports. The repository demonstrates how physical design data is systematically validated for **manufacturability, electrical connectivity, design-rule compliance, and overall tapeout readiness**.
 
 Key areas covered include:
 
