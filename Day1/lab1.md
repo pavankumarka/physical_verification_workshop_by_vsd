@@ -350,7 +350,7 @@ copy the files xschem/inverter_tb.spice to mag folder and edit
 
 <img width="720" height="551" alt="image" src="https://github.com/user-attachments/assets/b0f7562f-a667-4c71-9e54-e452ff9571ec" />
 
-Same as earliest simulation wrt vtg
+Same as earlier simulation wrt vtg
 
 <img width="1588" height="926" alt="image" src="https://github.com/user-attachments/assets/8ec51460-09c3-4156-b0df-30ce49ac3ba2" />
 
