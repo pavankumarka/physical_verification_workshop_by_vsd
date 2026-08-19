@@ -40,7 +40,7 @@ Overall, the repository provides practical experience with **open-source physica
 | Version Control | Git & GitHub | Source control and documentation |
 ---
 
-# (Day 1 - Introduction to SKY130 and Open Source Tools)[https://github.com/pavankumarka/physical_verification_workshop_by_vsd/tree/main/Day1]
+# [Day 1 – Introduction to SKY130 and Open-Source Tools](https://github.com/pavankumarka/physical_verification_workshop_by_vsd/tree/main/Day1)
 
 # Day 2 - DRC and LVS Theory and labs
 
