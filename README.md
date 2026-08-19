@@ -21,9 +21,7 @@ Key areas covered include:
 Overall, the repository provides practical experience with **open-source physical verification flows and SKY130-based IC design**, bridging theoretical knowledge with real-world implementation. It is intended to build foundational skills relevant to careers in **Physical Verification, Design Enablement, PDK Development, Custom Layout, and Semiconductor Physical Design**.
 
 
-
-<img width="1024" height="1536" alt="ChatGPT Image Aug 19, 2026, 06_27_11 PM" src="https://github.com/user-attachments/assets/6ffd7ce5-3338-4958-9771-06931399712d" />
-
+<img width="1024" height="1536" alt="ChatGPT Image Aug 19, 2026, 06_40_07 PM" src="https://github.com/user-attachments/assets/79cb4d73-1740-4919-98b6-73b69157f7c5" />
 
 
  
