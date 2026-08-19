@@ -1,0 +1,27 @@
+**.subckt inverter_tb out in
+*.opin out
+*.ipin in
+
+*x1 net1 in out GND inverter
+x1 in out GND vdd inverter
+V1 in GND PWL(0 0 20n 0 900n 1.8)
+*V2 net1 GND 1.8
+V2 vdd GND 1.8
+**** begin user architecture code
+
+.lib /usr/share/pdk/sky130A/libs.tech/ngspice/sky130.lib.spice tt
+
+
+.control
+tran 1n 1u
+plot V(in) V(out)
+.endc
+
+**** end user architecture code
+**.ends
+
+.include inverter.spice
+
+.GLOBAL GND
+** flattened .save nodes
+.end
