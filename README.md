@@ -1,1 +1,2817 @@
 # physical_verification_workshop_by_vsd
+
+# Physical Verification Workshop — SKY130 PDK
+
+This repository presents a hands-on **Physical Verification (PV) workshop** based on the open-source **SKY130 Process Design Kit (PDK)**. It provides practical exposure to industry-standard verification methodologies and workflows required to validate an IC layout prior to fabrication and tapeout.
+
+The workshop progresses through multiple learning modules covering **Design Rule Checking (DRC), Layout Versus Schematic (LVS), parasitic extraction, hierarchy management, GDSII generation, density verification, antenna analysis, Electrical Rule Checking (ERC), and tapeout sign-off concepts**.
+
+The training combines fundamental concepts with practical implementation using **Magic VLSI, Netgen, OpenLane, and the SKY130 PDK**. Each module includes verification procedures, command references, debugging methodologies, screenshots, and detailed analysis of verification reports. The repository demonstrates how physical design data is systematically validated for **manufacturability, electrical connectivity, design-rule compliance, and overall tapeout readiness**.
+
+Key areas covered include:
+
+* **DRC:** Verification of layout geometries against foundry-defined design rules.
+* **LVS:** Verification of layout-versus-schematic connectivity and device correspondence.
+* **Parasitic Extraction:** Extraction and analysis of parasitic resistance and capacitance for post-layout characterization.
+* **Hierarchy Management:** Understanding and validating hierarchical layout structures and extracted netlists.
+* **CIF/GDSII Generation:** Preparation and verification of industry-standard layout exchange formats.
+* **Density and Fill Verification:** Analysis of metal density and fill requirements, including CMP-aware design considerations.
+* **Antenna Checks:** Identification and mitigation of plasma-induced antenna violations.
+* **ERC:** Detection of electrical connectivity and reliability issues beyond geometric DRC.
+* **Tapeout Sign-Off:** Understanding the sequence of physical verification checks required before manufacturing release.
+
+Overall, the repository provides practical experience with **open-source physical verification flows and SKY130-based IC design**, bridging theoretical knowledge with real-world implementation. It is intended to build foundational skills relevant to careers in **Physical Verification, Design Enablement, PDK Development, Custom Layout, and Semiconductor Physical Design**.
+
+
+
+<img width="1536" height="1024" alt="ChatGPT Image Jul 2, 2026, 05_50_54 PM" src="https://github.com/user-attachments/assets/a0acdbdd-cd1a-491f-ab72-56ea50cc1e8d" />
+
+
+ 
+## 🛠️ Tools Used
+ 
+ 
+| Category | Tool | Purpose |
+|----------|------|----------|
+| PDK | SKY130A | Open-source Process Design Kit |
+| Layout Editor | Magic VLSI | Layout creation, DRC and extraction |
+| LVS Tool | Netgen | Layout Versus Schematic verification |
+| Physical Design | OpenLane | RTL-to-GDSII automated flow |
+| Simulator | NGSPICE | Circuit simulation and analysis |
+| Operating System | Ubuntu Linux | Development environment |
+| Version Control | Git & GitHub | Source control and documentation |
+---
+
+# Day 1 - Introduction to SKY130 and Open Source Tools
+
+###  PV_D1SK1 - Introduction to SkyWater PDKs and opensource EDA tools
+
+<details>
+<summary><b>L1 - Introduction to Skywater PDK</b></summary>
+
+PDK (Process Design Kit) = a collection of files provided by a semiconductor foundry that tells EDA tools how to design and verify circuits for a specific technology node.
+
+It typically contains:
+- Design Rules (DRC) → minimum width, spacing, enclosure, etc. 
+- Device Definitions → NMOS, PMOS, resistors, capacitors. 
+- PCells → parameterized layout cells. 
+- LVS Decks → compare schematic vs layout. 
+- Extraction Rules (PEX) → extract parasitics (R, C). 
+- Technology Files → layer definitions, colors, display settings.
+
+- 
+Skywater 130 PDK : Open source PDK from google. Here we have open source PDK, which consists of 
+Documentation: https://skywater-pdk -- 136.org.readthedocs.build
+
+PDK Library and files https://github.com/google/skywater-pdk
+If one needs to be a part of the community, you can join the same like Community slack https://join.skywater.tools
+
+</details>
+
+<details>
+<summary><b>L2 - Opensource EDA Tools</b></summary>
+
+<img width="679" height="373" alt="image" src="https://github.com/user-attachments/assets/1da4244d-3d5d-4464-8597-0df2511e5592" />
+
+
+Basically, the open source PDK repository shows here takes the Skywater 130 PDK. It clones skywater 130 PDK to here. 
+
+
+The open source tools supported by open PDKs are: 
+
+
+1.	magic : Magic is an open-source VLSI layout editor used for layout design, DRC, and extraction.
+2.	KLayout: KLayout is used for viewing, editing, and verifying IC layouts
+3.	OpenLane: OpenLane automates the complete digital ASIC flow from RTL to GDS
+4.	Xschem: xschem is used for schematic entry and netlist generation.
+5.	Netgen: Netgen checks whether the layout matches the schematic
+6.	Ngspice: ngspice is used to simulate circuit behavior before fabrication
+7.	Qflow: Qflow is an open-source RTL-to-GDS digital design flow
+8.	IRSIM: IRSIM performs transistor-level digital logic simulation.
+9.	XCircuit: XCircuit is a schematic drawing and netlist-generation tool
+
+<img width="940" height="508" alt="image" src="https://github.com/user-attachments/assets/cc934c81-b177-45d6-a31f-061f5206d94f" />
+
+
+</details>
+
+<details>
+<summary><b>L3 - Understanding Skywater PDK – Layers</b></summary>
+
+At every point of time for validation purposes, we need to know about layers used inside the whole PDK for debugging. The layers used inside the sky water PDK are;
+
+<img width="940" height="505" alt="image" src="https://github.com/user-attachments/assets/751ec99e-8e64-4968-974c-e88188393c0f" />
+
+Titanium nitride has high resistance. So it is used during the initial stages only. 
+
+<img width="747" height="544" alt="image" src="https://github.com/user-attachments/assets/f8efd3ca-da2b-403b-b571-d9e88ed40e01" />
+
+This figure shows the front-end layers of the SKY130 process, i.e., the layers used to build the transistor and make the first level of connections before Metal1.
+
+1. N-well
+•	Region where PMOS transistors are built. 
+•	Created inside the p-type substrate.
+2. P-well
+•	Region where NMOS transistors are built. 
+•	Used to isolate NMOS devices.
+3. P-diffusion (P+ diffusion)
+•	Source/drain region of a PMOS. 
+•	Heavily doped P-type area inside the N-well.
+4. N-diffusion (N+ diffusion)
+•	Source/drain region of an NMOS. 
+•	Heavily doped N-type area inside the P-well.
+5. N-tap
+•	N+ region inside N-well. 
+•	Used to connect the N-well to VDD.
+6. P-tap
+•	P+ region inside P-well. 
+•	Used to connect the P-well/substrate to GND.
+7. Polysilicon (Poly)
+•	Forms the transistor gate. 
+•	When Poly crosses Active (Diffusion), a MOS transistor is created.
+9. Local Interconnect (LI)
+•	Titanium Nitride (TiN) routing layer. 
+•	Used for short local connections near transistors. 
+•	Exists between device layers and Metal1.
+
+<img width="940" height="612" alt="image" src="https://github.com/user-attachments/assets/444538ef-d2b9-4b0f-96da-f4b719fcb27c" />
+
+High Voltage Layer can resist higher voltage. If used under the gate as a gate oxide can bear upto a voltage of 5V in this PDK. 
+
+<img width="940" height="627" alt="image" src="https://github.com/user-attachments/assets/ede974fc-36f0-422e-9169-c150b31f7e7f" />
+
+This is a AI generated Image showing how MiM capacitors uses higher metal layer as the capacitor plates. 
+
+<img width="732" height="588" alt="image" src="https://github.com/user-attachments/assets/50bc8ef5-b066-40ec-8892-4f6d320bfe77" />
+
+<img width="940" height="560" alt="image" src="https://github.com/user-attachments/assets/a976121d-2f2d-433f-be5d-ff2cd79b1e16" />
+
+AI generated image for Bump PAD.
+
+<img width="940" height="627" alt="image" src="https://github.com/user-attachments/assets/240bdea6-3933-49b7-83ff-a0d8dac753c9" />
+
+### Flip-Chip / WLCSP Packaging 
+
+In traditional packaging, the chip is placed upright and connected to the package using thin gold wires. In Flip-Chip or WLCSP (Wafer Level Chip Scale Package), the chip is turned upside down so that its pads face the PCB directly. Small solder bumps are formed on the chip pads, allowing the chip to connect directly to the PCB without wire bonds. The signal path becomes much shorter:
+Transistor → Metal Layers → Pad → RDL → UBM → Solder Bump → PCB
+This results in lower resistance, lower inductance, better power delivery, higher speed, and a smaller package size. The RDL (Redistribution Layer) is used to reroute pad locations, while the UBM (Under Bump Metallization) provides a reliable surface for the solder bump to attach. WLCSP is commonly used in smartphones, wearables, IoT devices, and other space-constrained high-performance applications.
+
+</details>
+
+<details>
+<summary><b>L4 - Understanding Skywater PDK – Devices</b></summary>
+
+These are the different kinds of devices supported in skywater PDK. The basic structure is as follows:
+
+<img width="709" height="600" alt="image" src="https://github.com/user-attachments/assets/fea4149b-9ec4-4453-bb56-d39a57be9711" />
+
+<img width="744" height="509" alt="image" src="https://github.com/user-attachments/assets/ce8670ba-65e2-40e7-96de-8bceff36429a" />
+
+<img width="735" height="545" alt="image" src="https://github.com/user-attachments/assets/a1bae8b9-6623-4d48-a149-84c14202da81" />
+
+<img width="713" height="523" alt="image" src="https://github.com/user-attachments/assets/8f0d0cb8-83fc-4c40-981a-04c94fef14e3" />
+
+<img width="940" height="282" alt="image" src="https://github.com/user-attachments/assets/3faf0ab7-8bae-462d-892e-4acf5df9d599" />
+
+</details>
+
+<details>
+<summary><b>L5 - Understanding Skywater PDK Libraries</b></summary>
+
+There re 3 types of Device Libraries in Skywater PDK.
+
+
+1.	Digital Standard cells
+This contains the standard cells gds and files which are used by the digital synthesis flows such as liberty,timing files, technology files, lef files, verilof & spice netlist.
+
+<img width="940" height="774" alt="image" src="https://github.com/user-attachments/assets/7f0d6ee7-bea7-49b9-a658-0a4cbfa71fbf" />
+
+_nor2_2 represents 2 input nor gate with relatively current density value equals 2. Its not a specific value it can be relative to others.
+
+<img width="940" height="768" alt="image" src="https://github.com/user-attachments/assets/f7451f98-6694-4d60-b0e1-662241041b51" />
+
+<img width="940" height="802" alt="image" src="https://github.com/user-attachments/assets/4a6d7a1d-8790-4465-87b9-bf710d04b2bf" />
+
+An overlay cell is a layout-only cell, typically consisting of metal and via layers, that is placed on top of a base IO cell to create optional electrical connections such as pad-to-power or ESD-clamp-to-power connections. Overlay cells improve flexibility and reduce library complexity by allowing the same base IO cell to be reused in multiple configurations without creating separate cell variants.
+
+
+</details>
+
+<details>
+<summary><b>L6 - Opensource Tools And Flows</b></summary>
+
+<img width="940" height="451" alt="image" src="https://github.com/user-attachments/assets/91e4e4a7-8891-49b8-a5cb-33593924566d" />
+
+The schematic will be formed from xschem. It is integrated with ngspice & gaw.
+
+<img width="940" height="384" alt="image" src="https://github.com/user-attachments/assets/ba8d17d9-5d8a-4a03-984a-ad5349a9eb21" />
+
+Layout is formed from generate(magic)
+Steps to create the Layout
+1.	Import the netlist of schematic in Layout tool.
+2.	Then the layout has to be drc clean
+3.	It has to be LVS clean
+
+<img width="706" height="534" alt="image" src="https://github.com/user-attachments/assets/fc4b9396-1cb8-4f7a-b868-53c923f9205d" />
+
+If these 2 netlists are equal, then LVS will be clean.
+
+</details>
+
+### PV_D1SK2 - Tool installations and basic DRC/LVS design flow
+
+<details>
+<summary><b>L1 - Check Tool Installations</b></summary>
+
+<img width="940" height="464" alt="image" src="https://github.com/user-attachments/assets/3419fe97-bc40-4986-a055-c1e01930e038" />
+
+Open the terminal & type “magic”. This will open 2 windows which are console & a layout window. 
+
+<img width="940" height="488" alt="image" src="https://github.com/user-attachments/assets/73b7a632-8400-4f62-87a6-33ea46196f98" />
+
+Netgen has only command line interface.
+
+<img width="940" height="428" alt="image" src="https://github.com/user-attachments/assets/ef06445d-166d-4053-abba-ca5e7b2380a9" />
+
+<img width="940" height="344" alt="image" src="https://github.com/user-attachments/assets/9a3dc649-9973-4fba-9ae6-c07b7f5e35ef" />
+
+Other commands used are 
+1.	netgen -noconsole
+2.	magic dnull -noconsole
+3.	ngspice -b
+
+<img width="879" height="690" alt="image" src="https://github.com/user-attachments/assets/26996b9b-eed1-4d89-a1f1-af0e1bd05a1b" />
+
+</details>
+
+
+<details>
+<summary><b>L2 - Creating Sky130 Device Layout In Magic</b></summary>
+
+The whole exercises can be divided into mainly 4, they are
+1.	Creating a schematic in “xschem”.
+2.	Exporting the netlist & importing in magic to create the layout.
+3.	Extracting the netlist from magic & simulating it.
+4.	Run LVS for the same.
+
+
+For the xschem, we need to copy the inverter setup which actually looks like,
+
+<img width="940" height="343" alt="image" src="https://github.com/user-attachments/assets/5dea3b2a-bd85-41f4-94bb-a863db54a2b2" />
+
+<img width="940" height="459" alt="image" src="https://github.com/user-attachments/assets/35aed75a-450f-4de3-bb43-6c7cb1e6ed99" />
+
+<img width="940" height="495" alt="image" src="https://github.com/user-attachments/assets/9b5bad91-0ccb-4682-8119-8348205b97ee" />
+
+To select any of the cells, press to any of the cells & “e”
+
+
+To come out of the window “cntrl+e”
+
+<img width="701" height="70" alt="image" src="https://github.com/user-attachments/assets/24301d75-1d8e-49b7-a7c7-44b3e11a4648" />
+
+<img width="940" height="462" alt="image" src="https://github.com/user-attachments/assets/32bd09a0-dabf-4798-a488-c1bfc575ec4b" />
+
+If we can see the technology name & the layers as coloured square boxes, the setup is successful.
+
+<img width="557" height="79" alt="image" src="https://github.com/user-attachments/assets/09986bd9-835c-43d5-9737-64c6d1d58910" />
+
+This for a good graphical view of the windows.
+
+<img width="835" height="731" alt="image" src="https://github.com/user-attachments/assets/c5c6f8bf-5725-4afe-a3b1-4c5578bf52dc" />
+
+How to instantiate a device in magic
+1.	Open magic
+2.	Click devices 1
+3.	Select the device, here I selected nmos
+4.	Provide the parameters->click create->apply
+5.	To view the device press “v”
+6.	Inorder to open the parameter tab press “cntrl+p”
+
+
+<img width="940" height="324" alt="image" src="https://github.com/user-attachments/assets/a741b358-1951-4e34-9916-cf1b6228fe78" />
+
+<img width="940" height="321" alt="image" src="https://github.com/user-attachments/assets/8ccf0cad-1758-4834-ae01-42ce5652455a" />
+
+
+To select a particular layer, hover the pointer onto the layer & press “s” for select.
+
+<img width="940" height="452" alt="image" src="https://github.com/user-attachments/assets/694d7ad7-077e-4e3f-a973-420f42a11104" />
+
+Now we don’t need to hover to the command window always. “:” this semicolon will work. So if we need to know about the layer, just hover, type “:” directly & then type what
+
+</details>
+
+
+<details>
+<summary><b>L3 - Creating Simple Schematic In Xschem</b></summary>
+
+Open xscheme->File->new schematic
+
+<img width="940" height="626" alt="image" src="https://github.com/user-attachments/assets/2a72e63d-9b22-4a3b-8a8c-82343674c89f" />
+
+<img width="940" height="615" alt="image" src="https://github.com/user-attachments/assets/5c2b72f8-c2a3-47a0-b71d-a8117bb8b378" />
+
+<img width="701" height="610" alt="image" src="https://github.com/user-attachments/assets/43cdb86b-aff3-4b17-93c7-ee1b8e91b474" />
+
+For pin, select->ipin
+Similarly instantiate a opin, iopin(for Vdd & Vss)
+
+
+Now for a wire, just hover over the starting point & press “w”. Then without clicking the mouse pointer just drag the mouse towards the ending point, then click “enter”
+
+<img width="940" height="615" alt="image" src="https://github.com/user-attachments/assets/20cf84e0-b816-42ed-827b-3da8419873b7" />
+
+<img width="940" height="518" alt="image" src="https://github.com/user-attachments/assets/09ce51f0-ed88-480d-9aa7-c173ac456cb2" />
+
+To change the pin name, select the pin, press “Q”. Change the name.
+
+<img width="729" height="817" alt="image" src="https://github.com/user-attachments/assets/a852520b-132b-446e-bc64-13ea1c05c0cf" />
+
+<img width="940" height="543" alt="image" src="https://github.com/user-attachments/assets/3327acff-3131-4e8c-a352-bd5a637ec153" />
+
+For Skywater PDK, the minimum width of the mosfet is 1.5 microns. So there are 3 fingers, in total it will comprise of 3*1.5=4.5u
+All the other parameters are layout specific, so we shall leave that.
+
+
+<img width="940" height="540" alt="image" src="https://github.com/user-attachments/assets/2aa95ba9-2860-4be8-b4c0-de3281769e8a" />
+
+For pfet devices, just mention the body terminal is connected to vdd. Spice netlist is case in sensitive, then als for our easy understanding, denote it by vdd.
+
+<img width="698" height="617" alt="image" src="https://github.com/user-attachments/assets/e5668277-9837-4abe-88b4-da2321dfafab" />
+
+
+File-> save as
+
+</details>
+
+
+<details>
+<summary><b>L4 - Creating Symbol And Exporting Schematic In Xschem</b></summary>
+
+<img width="940" height="433" alt="image" src="https://github.com/user-attachments/assets/b15f7a46-f833-438f-995d-6e9bde6e7f37" />
+
+<img width="940" height="459" alt="image" src="https://github.com/user-attachments/assets/5bb11757-3e03-43e2-8289-b0c77df87460" />
+
+<img width="626" height="542" alt="image" src="https://github.com/user-attachments/assets/b20dc1eb-c588-4655-a8cc-3e5cd73bacd2" />
+
+Open the symbol view which was inverter.sym which we already made and kept.
+
+<img width="804" height="316" alt="image" src="https://github.com/user-attachments/assets/d6b669fd-9ac9-4719-82ae-12d9330796bd" />
+
+
+Now for simulation, we must provide 2 voltage sources. Then a gnd pin also.
+
+<img width="698" height="610" alt="image" src="https://github.com/user-attachments/assets/1219b0c3-3cfb-44b8-b90e-513351af40a8" />
+
+<img width="701" height="622" alt="image" src="https://github.com/user-attachments/assets/7011ab89-1f08-4105-8f63-4823d78a0c47" />
+
+
+<img width="940" height="281" alt="image" src="https://github.com/user-attachments/assets/2a60e48f-486b-4ea8-a2ca-20c1cfdfa205" />
+
+
+Add the pin names. The transistors used are low voltage ones. So set Vdd into 1.8V. Now we need to set Vin. Since we need to plot the values which changes with time, here it is a PWL(piece wise linear). The way in which it is set is,
+pwl stands for Piecewise Linear voltage source. The values are specified as time-voltage pairs. In pwl(0 0 20n 0 900n 1.8), the voltage remains at 0 V until 20 ns and then ramps linearly to 1.8 V by 900 ns. It is commonly used to generate custom input waveforms and study circuit behavior during voltage transitions.
+
+
+<img width="692" height="342" alt="image" src="https://github.com/user-attachments/assets/3ab63ce7-9d3e-42b7-ae93-3a574d9cd477" />
+
+
+To run a simulation in ngspice, we need a model file provided by the foundry or PDK, which contains the device models and parameters of transistors and other components. In addition to the circuit schematic, we must specify the type of simulation to be performed, such as DC, AC, or Transient (TRAN) analysis. In xschem, these simulation commands are typically added using text blocks(code_shown.sym in the below figure), which are included in the generated SPICE netlist and interpreted by ngspice during simulation.
+
+<img width="700" height="607" alt="image" src="https://github.com/user-attachments/assets/bcc0d7e8-f8b0-4406-9d0c-f7ead7c237b9" />
+
+
+<img width="940" height="333" alt="image" src="https://github.com/user-attachments/assets/8f73dca7-1688-43de-bafb-691b2ccbe38e" />
+
+“.lib /usr/share/pdk/sky130A/libs.tech/ngspice/sky130.lib.spice tt"
+
+<img width="940" height="334" alt="image" src="https://github.com/user-attachments/assets/37e65fff-bcba-4a81-bd7a-516afb34ceab" />
+
+```
+".control
+trans 1n 1u
+plot V(in) V(out)
+endc"
+```
+For trans analysis from 1n to 1u, this will plot the graph between V(in) & V(out).
+
+<img width="940" height="392" alt="image" src="https://github.com/user-attachments/assets/fa8683ad-452c-4b41-8374-4722a1bc13d5" />
+
+
+<img width="940" height="392" alt="image" src="https://github.com/user-attachments/assets/33f92273-75dc-442c-81a4-4fd7e4181e58" />
+
+
+Now click Netlist to create the netlist of the schematic, then click Simulate.
+
+<img width="940" height="464" alt="image" src="https://github.com/user-attachments/assets/33207954-a57b-4632-8a65-2777e1fac09f" />
+
+<img width="940" height="407" alt="image" src="https://github.com/user-attachments/assets/e73e3150-76ef-4ca3-b414-18ffa58c9c3f" />
+
+<img width="940" height="405" alt="image" src="https://github.com/user-attachments/assets/933f7903-d7fe-4727-b383-af9e3d6b2166" />
+
+**LVS Netlist:** Top Level is a .subckt: This option instructs Xschem to generate the top-level schematic as a SPICE subcircuit (.subckt) instead of a complete standalone circuit. The generated netlist includes .subckt and .ends statements, allowing the design to be instantiated as a reusable hierarchical block within larger circuits. This is particularly important for Layout Versus Schematic (LVS) verification, where the extracted layout netlist is compared against the schematic netlist at the subcircuit level. Enabling this option ensures compatibility with hierarchical designs and simplifies the reuse of schematic blocks such as inverters, NAND gates, and other standard cells during simulation and physical verification.
+
+<img width="940" height="226" alt="image" src="https://github.com/user-attachments/assets/838f4884-f283-4bee-94be-737d5aac9ae5" />
+</details>
+
+
+<details>
+<summary><b>L5 - Importing Schematic To Layout And Inverter Layout Steps</b></summary>
+
+Now inorder to work with magic, we must import the layout into the magic. For that we need the latest LVS netlist.
+
+<img width="635" height="201" alt="image" src="https://github.com/user-attachments/assets/b4cbee51-d924-4538-8629-b3dbe8e025b0" />
+
+
+<img width="940" height="449" alt="image" src="https://github.com/user-attachments/assets/80a7251a-3837-4cf7-844f-047537d793de" />
+
+
+<img width="940" height="442" alt="image" src="https://github.com/user-attachments/assets/e4c7ebe8-2678-4a7a-abed-c125fe498340" />
+
+
+1.	To select the instance: Hover on the instance (don’t click), press “i”.
+
+  
+2.	To move the instance: Select the instance, move the cursor to the lower left corner of the destination to be moved & press “m”
+
+   
+3.	To see the parameter window: Select the instance, press”ctrl+p”
+
+
+<img width="601" height="807" alt="image" src="https://github.com/user-attachments/assets/9c3c2018-507a-4991-a45d-353e1490e824" />
+
+
+<img width="610" height="803" alt="image" src="https://github.com/user-attachments/assets/9b9e6f86-6313-4131-9e93-3e4a0c278f06" />
+
+
+<img width="534" height="579" alt="image" src="https://github.com/user-attachments/assets/3233171c-8bdd-44f5-bf8a-51d0a39f794a" />
+
+
+The layout after connections will look something like this
+1.	For a metal wire, first draw the approximate rectangle shape then hover to a specific metal & press middle most button. For example if we want to connect vss pin to guard ring, first draw the rectangle metal wire, then select that shape hover the black pointer to somewhere inside the vss pin itself (because its of metal 1), press middle most mouse button.
+
+ 
+2.	Then for constant wire connection, press “space bar”, then the mouse pointer will get changed, take the “arrow mark one”, drag with left mouse button. To stop again middle mouse button.
+
+</details>
+
+
+<details>
+<summary><b>L6 - Final DRC/LVS Checks And Post Layout Simulations</b></summary>
+
+<img width="940" height="366" alt="image" src="https://github.com/user-attachments/assets/2ab4418f-ade8-491a-b835-1bcd3f2152b0" />
+
+<img width="513" height="174" alt="image" src="https://github.com/user-attachments/assets/14d67cb8-ea56-47eb-aa88-21848c8e267e" />
+
+
+<img width="940" height="324" alt="image" src="https://github.com/user-attachments/assets/f8cbf39f-5ad2-4763-ac88-783da8161bb2" />
+
+
+```
+% extract do local
+% extract all
+% ext2spice lvs
+% ext2spice
+```
+
+**ext2spice lvs** -no parasitics extracted
+
+<img width="940" height="79" alt="image" src="https://github.com/user-attachments/assets/ea1953c1-c3cb-4f8d-a50d-b9b799bf283e" />
+
+
+For LVS use this command: 
+Note: Use Layout netlist first
+```
+netgen -batch lvs "../magic/inverter.spice inverter" "../xschem/inverter.spice inverter"
+```
+
+<img width="906" height="873" alt="image" src="https://github.com/user-attachments/assets/d50ced0f-9c74-4635-a135-55a513394ae5" />
+
+When we add,
+
+```
+% ext2spice cthresh 0
+```
+
+This will add the parasitic capacitances also to the netlist, which will look like 
+
+<img width="940" height="691" alt="image" src="https://github.com/user-attachments/assets/202de445-f5c7-42bf-a48f-099db8189405" />
+
+
+<img width="940" height="57" alt="image" src="https://github.com/user-attachments/assets/bb450592-a89a-4e97-a951-5a7f58c38920" />
+
+
+Now use the same test bench, but instead of the xshem netlist earlier, we need to use magic extracted netlist with parasitics. This netlist pin order may be changed. Make changes as necessary. 
+
+
+<img width="940" height="383" alt="image" src="https://github.com/user-attachments/assets/723bae06-e818-41e7-86ad-1641207611e4" />
+
+
+```
+% cp -r ../xschem/.spiceinit .
+```
+
+<img width="832" height="242" alt="image" src="https://github.com/user-attachments/assets/9cb70169-f5ea-4a84-9c06-380e6e40f33b" />
+
+</details>
+
+
+---
+
+
+# Day 2 - DRC and LVS Theory and labs
+
+### PV_D2SK1 - Introduction to DRC and LVS
+
+<details>
+<summary><b>L1 - Understanding GDS Format</b></summary>
+
+**DRC (Design Rule Checking)**
+Make sure design meets all the foundry constraints.
+
+**LVS (Layout vs Schematic)**
+Make sure a design layout matches a simulatable  netlist by electrical connectivity & devices.
+
+<img width="940" height="564" alt="image" src="https://github.com/user-attachments/assets/c0c14999-368e-4e23-a69c-a3dfc670ebb2" />
+
+
+LVS make sure that if multiple things(netlist) are formed from independent sources (here schematic & layout), then it can be crosschecked to find errors in each other.
+
+
+<img width="940" height="478" alt="image" src="https://github.com/user-attachments/assets/928d5fb6-82f2-4688-b6f6-db7ba8a555fe" />
+
+
+The modern practice makes sure that from a single source itself (RTL) the schematic & layout are generated. 
+
+
+<img width="669" height="510" alt="image" src="https://github.com/user-attachments/assets/fd0d2c78-ec20-4dd9-9d90-3d0a2ed8d12e" />
+
+
+Magic tool was written in CIF format. Its human readable. 
+
+<img width="940" height="480" alt="image" src="https://github.com/user-attachments/assets/c3901f58-a7de-4749-a6ae-27182a8d5d25" />
+
+
+In GDS, the data is written as a layer-purpose pair. Purpose can be drawing, pin, blockage, label etc. But this layer purpose pair in one technology/foundry won’t be the same in the other. This creates discrepancies.
+
+
+<img width="940" height="432" alt="image" src="https://github.com/user-attachments/assets/cf980438-a4ff-4492-a46e-272d51f9673a" />
+
+
+The actual layout data consists of geometric information such as rectangles, polygons, and subcell instances, which are the shapes that will ultimately be fabricated on silicon. GDS also stores some metadata, including labels, cell names, instance names, and cell boundaries, which help EDA tools understand and organize the design hierarchy. However, important design information such as device types (NMOS, PMOS, resistor, etc.), pin classes/usages, and electrical characteristics like current sources and sinks are not stored in GDS. This is why a GDS file alone cannot fully describe the circuit's functionality; LVS and extraction tools must infer devices and connectivity from the layout geometry and technology rules. In short, GDS primarily contains physical geometry and limited hierarchy information, but not the complete electrical intent of the design.
+
+</details>
+
+<details>
+<summary><b>L2 - Extraction Commands, Styles and Options In Magic</b></summary>
+
+<img width="720" height="342" alt="image" src="https://github.com/user-attachments/assets/937b314e-28ed-41c6-805f-61087075bd12" />
+
+
+The layout lacks many metadata as discussed. So inorder to compare with any circuit it needs something as “netlist”. The process of getting a netlist just from some geometrical details from the layout is called as “extraction”.
+
+
+<img width="742" height="425" alt="image" src="https://github.com/user-attachments/assets/aa83457d-3eeb-440b-928b-10ce96a3e79d" />
+
+
+The commands used for extraction are; 
+
+<img width="729" height="503" alt="image" src="https://github.com/user-attachments/assets/ebca529d-ca2d-4a26-a923-18ebab1f6823" />
+
+
+<img width="729" height="503" alt="image" src="https://github.com/user-attachments/assets/6bd0ffd2-63d3-4907-a941-a1ba115c4e0d" />
+
+
+<img width="729" height="517" alt="image" src="https://github.com/user-attachments/assets/2b2ad948-e7b7-4423-b829-545d1c333037" />
+
+</details>
+
+<details>
+<summary><b>L3 - Advanced Extraction Options In Magic</b></summary>
+
+
+<img width="720" height="544" alt="image" src="https://github.com/user-attachments/assets/f0ba65c2-2da6-45b7-8272-07d105f76b58" />
+
+
+**ext2spice hierarchy on**
+This option preserves the hierarchical structure of the layout when generating the SPICE netlist. Instead of flattening all devices into a single level, Magic keeps the parent-child cell relationships intact using .subckt definitions. This makes LVS faster and easier to debug because the extracted netlist closely resembles the original design hierarchy.
+
+
+**ext2spice format ngspice**
+This tells Magic to generate the netlist in a syntax compatible with NGSPICE. The extracted devices, node names, and subcircuits are written in a format that can be directly understood by NGSPICE and most SPICE-based simulators without requiring additional conversion.
+
+
+**ext2spice cthresh infinite**
+The capacitance threshold is set to infinity, which effectively disables extraction of parasitic capacitors. Since LVS only compares connectivity and devices, parasitic capacitances are unnecessary and would only clutter the netlist. As a result, no extracted capacitors appear in the output SPICE file.
+
+
+**ext2spice rthresh infinite**
+The resistance threshold is also set to infinity, preventing extraction of parasitic resistors. During LVS, we only need to verify that devices and connections match the schematic, so wire resistances are ignored. This keeps the netlist compact and focused on connectivity.
+
+
+**ext2spice renumber off**
+Normally Magic may replace net names with automatically generated node numbers such as N001, N002, etc. With renumbering turned off, original net names are preserved. This makes debugging LVS mismatches much easier because the extracted netlist uses recognizable signal names.
+
+
+**ext2spice scale off**
+This option prevents Magic from applying additional scaling factors to device dimensions. The extracted transistor widths and lengths are written directly in the technology's physical units, ensuring consistency between the layout and schematic netlists during comparison.
+
+
+
+**ext2spice blackbox on**
+With black-boxing enabled, lower-level cells can be treated as black boxes whose internal details are not expanded in the netlist. Only their interface pins are retained. This is useful when certain blocks are already verified or when only top-level connectivity is important for LVS.
+
+
+
+**ext2spice subcircuit top auto**
+This automatically creates a top-level subcircuit for the design being extracted. Magic determines the highest-level cell and wraps the entire netlist inside a .subckt definition, making the output suitable for hierarchical LVS and SPICE processing.
+
+
+
+**ext2spice global off**
+This disables automatic treatment of certain nets as global nets. Signals such as VDD and GND must be connected explicitly rather than being assumed globally connected throughout the design. This avoids false LVS matches caused by hidden global connections and ensures that connectivity is verified accurately.
+
+
+</details>
+
+<details>
+<summary><b>L4 - GDS Reading Option In Magic</b></summary>
+
+
+<img width="940" height="241" alt="image" src="https://github.com/user-attachments/assets/f5a21d6c-bf3b-44ef-8f50-d0852f1a9c4d" />
+
+
+There are several uses of reading the gds into readonly mode. First among that is “Abstract” of a cell.
+
+
+<img width="940" height="474" alt="image" src="https://github.com/user-attachments/assets/1eea3d17-895b-4397-90ef-84b986ca5502" />
+
+First through read only cell, the cell data is fetched as GDS of the PDK library file. Then the same macro is fetched from the LEF file. Then the pointers which was pointing the gds file is pointers are copied from the read only file to ath ABSTRACT views. 
+
+
+<img width="940" height="515" alt="image" src="https://github.com/user-attachments/assets/dda60a2a-34a4-45a6-8e28-a9e83aa13788" />
+
+
+During GDS import and device extraction, Magic performs device recognition based on the geometric layers present within a cell. A challenge arises when a transistor is defined in a child cell while a device-modifying layer, such as a High Voltage Implant (HVI), is placed in the parent cell. Although the combination of the transistor and HVI layer should form a high-voltage device, Magic's hierarchical processing prevents it from associating layers that reside in different hierarchy levels. As a result, the device may be incorrectly extracted as a standard transistor instead of a high-voltage transistor. To resolve this issue, the affected cells must be flattened using commands such as `gds flatglob` or `flatten`, which merge the geometry from different hierarchy levels into a single layout view. Once flattened, Magic can recognize all relevant layers together and correctly identify the intended device, ensuring accurate extraction and LVS verification.
+
+
+</details>
+
+<details>
+<summary><b>L5 - GDS Writing, Input, Output Styles and Output Issues</b></summary>
+
+<img width="940" height="556" alt="image" src="https://github.com/user-attachments/assets/a2e3101c-aaea-41fa-8dd7-330544aabbb8" />
+
+
+<img width="940" height="624" alt="image" src="https://github.com/user-attachments/assets/9f03479f-74b5-474e-805d-519bf0436a3c" />
+
+
+This addendum option removes any read only cell details.
+
+
+<img width="940" height="628" alt="image" src="https://github.com/user-attachments/assets/4edd80e6-35e2-4f6a-9757-68f69c7a8fe6" />
+
+
+<img width="940" height="343" alt="image" src="https://github.com/user-attachments/assets/973a73d1-2bfd-4840-b4bb-8bf0553d6314" />
+
+
+GDS input styles in Magic are predefined layer-mapping configurations stored in the technology file's cifinput section. They determine how GDS layer numbers and datatypes are translated into Magic's internal layers during GDS import. Multiple styles, such as sky130() and sky130(vendor), allow Magic to support different layer conventions while reading the same process technology.
+
+
+<img width="940" height="377" alt="image" src="https://github.com/user-attachments/assets/2fc3f365-0200-4704-8019-7df82b2c8c2b" />
+
+
+<img width="940" height="663" alt="image" src="https://github.com/user-attachments/assets/a08e8f74-593d-4f86-9104-4882526f8aa3" />
+
+
+<img width="940" height="503" alt="image" src="https://github.com/user-attachments/assets/a0b0c124-d264-481f-a601-7e82ec643452" />
+
+
+These are the cifoutput styles command.
+
+<img width="940" height="131" alt="image" src="https://github.com/user-attachments/assets/7871de46-575d-492d-813b-fab559a79216" />
+
+</details>
+
+<details>
+<summary><b>L6 - DRC Rules In Magic</b></summary>
+
+<img width="940" height="378" alt="image" src="https://github.com/user-attachments/assets/0c4e2023-5f37-4ba4-9102-b4ab8fc086c8" />
+
+
+The commands used for DRC checks are as follows;
+
+
+<img width="940" height="518" alt="image" src="https://github.com/user-attachments/assets/e225b4f6-e69a-4df0-8782-7cad81a419bd" />
+
+
+DRC can be checked in these ways. This depends on the tool:
+
+
+<img width="940" height="712" alt="image" src="https://github.com/user-attachments/assets/2570f3fc-25a0-4510-877c-b54bfe1be7b2" />
+
+
+<img width="940" height="525" alt="image" src="https://github.com/user-attachments/assets/5be7c77e-5adc-47aa-860e-029190f8965f" />
+
+
+<img width="940" height="622" alt="image" src="https://github.com/user-attachments/assets/b44bb393-c36a-40c3-898c-da4ae074cc40" />
+
+
+</details>
+
+<details>
+<summary><b>L7 - Extraction Rules And Errors In Magic</b></summary>
+
+
+<img width="940" height="653" alt="image" src="https://github.com/user-attachments/assets/0b8498d5-c1a3-491f-b990-b6483264f10e" />
+
+
+When you draw metal wires in layout, they don't behave as ideal conductors. Every conductor forms unwanted capacitances with nearby conductors and the substrate. These are called parasitic capacitances.
+Area capacitance (wire-to-substrate)
+Overlap capacitance (between overlapping conductors)
+Fringe capacitance (edge electric fields)
+Sidewall or coupling capacitance (between adjacent conductors)
+ 
+These parasitics affect delay, power consumption, crosstalk, and signal integrity, so extraction tools such as Magic estimate them for post-layout simulation. 
+In advanced nodes (28nm and below), sidewall/coupling capacitance often dominates. That's why increasing spacing between critical nets can significantly reduce crosstalk and timing issues even when the wire area remains the same.
+
+
+</details>
+
+<details>
+<summary><b>L8 - LVS Setup For Netgen</b></summary>
+
+Netgen is completely unaware of the circuit, it only cares about the netlists. So there are some problems it will encounter.
+
+<img width="729" height="217" alt="image" src="https://github.com/user-attachments/assets/1456deda-6cc1-4e5a-8de1-299c34dcbfb6" />
+
+
+•	When there are permutable(interchangeable) terminals for a device like resistor terminals or source & drain of a mosfet, LVS cannot recognise the same.
+
+
+•	When the resistance of a device in schematic is x & in layout there will be 10 resistors with resistance/10, the tool should understand. In short in layout it should consider the device as one not ten.
+
+
+All these are noted in the setup file of netgen.
+
+<img width="735" height="498" alt="image" src="https://github.com/user-attachments/assets/6eed8971-de01-4ad4-b677-a346dc77cfaf" />
+
+</details>
+
+<details>
+<summary><b>L9 - Verification By XOR</b></summary>
+
+
+<img width="720" height="376" alt="image" src="https://github.com/user-attachments/assets/8abe2e19-6644-4547-859c-b72b11e1c9fd" />
+
+The Boolean XOR operation is used to compare two layout regions and highlight only the areas where they differ. Matching regions cancel out, while any missing or additional geometry appears in the XOR result, making it an effective method for detecting layout mismatches.
+
+</details>
+
+### PV_D2SK2 - Labs for GDS read/write, extraction, DRC, LVS and XOR setup
+
+</details>
+
+<details>
+<summary><b>L1 - GDS Read</b></summary>
+
+```
+% cif listall istyle
+% cif listall istyle : To check the default style
+% gds read /usr/share/pdk/sky130A/libs.ref/sky130_fd_sc_hd.gds
+%cellname top
+```
+
+
+<img width="940" height="321" alt="image" src="https://github.com/user-attachments/assets/b7c896de-aa1e-4e38-983c-cf2ea1799f69" />
+
+
+<img width="940" height="321" alt="image" src="https://github.com/user-attachments/assets/9cc9fbe1-0948-46f8-a5f5-ca28be442b33" />
+
+
+<img width="940" height="447" alt="image" src="https://github.com/user-attachments/assets/99718c0e-fc6e-44c2-945a-ee664dffffa9" />
+
+
+<img width="940" height="443" alt="image" src="https://github.com/user-attachments/assets/e5bc2140-00d5-47e9-bf01-70ea4b2966db" />
+
+
+<img width="940" height="445" alt="image" src="https://github.com/user-attachments/assets/3e032cf8-ddfc-43f8-9552-10aa88eb3258" />
+
+
+<img width="560" height="76" alt="image" src="https://github.com/user-attachments/assets/dc5b7e45-5b7b-475f-a042-3cae51df79b0" />
+
+
+Since the current style is vendor, the blue colored text are “pins”.
+
+
+<img width="798" height="84" alt="image" src="https://github.com/user-attachments/assets/6523c5bc-563f-4449-8d3c-074b041ef9f2" />
+
+
+<img width="570" height="564" alt="image" src="https://github.com/user-attachments/assets/bb889cef-babd-4d92-a037-19607ee92141" />
+
+
+The pins appeared as labels.
+Here the present cell got overwritten. If we don’t want to overwrite the command is
+
+
+```
+% gds noduplicates true
+```
+
+</details>
+
+<details>
+<summary><b>L2 – Ports</b></summary>
+
+
+<img width="940" height="362" alt="image" src="https://github.com/user-attachments/assets/3795d300-621d-4a42-9da3-0a7372e66848" />
+
+
+As gds lacks the metadata of pin class, it came default.
+To read lef file
+
+```
+% lef read /usr/share/pdk/sky130A/libs.ref/sky130_fd_sc_hd/lef/sky130_fd_sc_hd.lef
+```
+
+
+<img width="939" height="251" alt="image" src="https://github.com/user-attachments/assets/9ecb4669-2b65-4502-a189-fb89069216c7" />
+
+
+```
+% port 1 name
+% port 1 class
+% port 1 use
+```
+
+
+Lef file contains metadata such as port name, class use etc. That’s why we can get the same after loading the specific cell’s lef file here.
+
+
+Now we can load the spice netlist of the standard cell & see:
+
+```
+% readspice /usr/share/pdk/sky130A/libs.ref/sky130_fd_sc_hd/spice/sky130_fd_sc_hd.spice
+```
+
+</details>
+
+<details>
+<summary><b>L3 - Abstract Views</b></summary>
+
+
+First load LEF view of a cell
+
+```
+% lef read /usr/share/pdk/sky130A/libs.ref/sky130_fd_sc_hd/lef/sky130_fd_sc_hd.lef
+```
+
+<img width="940" height="450" alt="image" src="https://github.com/user-attachments/assets/877f37bd-207d-4e68-bb7d-d6d1a97d2512" />
+
+
+This don’t have any transistors, labels etc.
+
+
+<img width="940" height="251" alt="image" src="https://github.com/user-attachments/assets/9265ed11-5ffb-4beb-8659-4b04698e11e6" />
+
+
+Once a gds has been written from abstract many information is lost. This can be shown as, 
+
+```
+% load test
+% getcell sky130_fd_sc_hd__and2_1
+```
+
+
+<img width="745" height="200" alt="image" src="https://github.com/user-attachments/assets/6effef6e-a274-49ca-bfb7-52cc82a98fd6" />
+
+
+<img width="940" height="449" alt="image" src="https://github.com/user-attachments/assets/65a2959c-e795-4237-8375-f294b7cb467e" />
+
+
+Now to write this to gds:
+
+
+<img width="940" height="90" alt="image" src="https://github.com/user-attachments/assets/0324a29d-eeff-4303-a9e8-194b136f6113" />
+
+
+Error message came
+Now close & restart magic. Read the gds. 
+
+
+<img width="940" height="156" alt="image" src="https://github.com/user-attachments/assets/5790f499-ffbf-4c12-b0d6-71febaf40edc" />
+
+
+<img width="940" height="445" alt="image" src="https://github.com/user-attachments/assets/5b43b506-dd3b-4cbe-a7dd-128837bc3f78" />
+
+
+Many information regarding the layout is lost here. Anything which is not a pin disappears from the gds. Because gds can hold pin data.
+
+
+</details>
+
+<details>
+<summary><b>L4 - Basic Extraction</b></summary>
+
+
+<img width="940" height="390" alt="image" src="https://github.com/user-attachments/assets/f64e829e-4c9e-4d62-8703-421402c19644" />
+
+
+Now limiting the threshold value of the capacitor to 0.01,
+
+<img width="940" height="379" alt="image" src="https://github.com/user-attachments/assets/8f67c4c4-33af-45b7-b8ce-c1ca1d6a241f" />
+
+Now for resistance extraction,
+
+```
+% ext2sim labels on
+% ext2sim
+```
+
+<img width="940" height="385" alt="image" src="https://github.com/user-attachments/assets/dc3d91db-3137-4bb1-9a80-f9f19959f89b" />
+
+
+```
+% ext2spice lvs
+% ext2spice 
+% ext2spice cthresh 0.01
+% ext2spice extresist on
+% ext2spice
+```
+
+
+<img width="940" height="371" alt="image" src="https://github.com/user-attachments/assets/a5235aa2-5370-4a57-9317-2df6d3b68d8e" />
+
+</details>
+
+<details>
+<summary><b>L5 - Setup For DRC</b></summary>
+
+
+Running DRC in batch mode
+
+```
+% /usr/share/pdk/sky130A/libs.tech/magic/run_standard_drc.py /usr/share/pdk/sky130A/libs.ref/sky130_fd_sc_hd/mag/sky130_fd_sc_hd__and2_1.mag
+```
+
+
+<img width="940" height="229" alt="image" src="https://github.com/user-attachments/assets/8b4f4fa0-52b3-4ee9-8bc2-bbfe67276661" />
+
+
+This will create a DRC report “sky130_fd_sc_hd__and2_1_drc.txt”
+
+
+<img width="940" height="370" alt="image" src="https://github.com/user-attachments/assets/1ba07248-bdf3-413a-9ddd-992e06bdceb5" />
+
+
+A standard cell also shows some DRC errors, because the wells are not connected.
+
+
+<img width="940" height="339" alt="image" src="https://github.com/user-attachments/assets/9d5cca0a-11be-4f4d-8e0f-cf723af230f6" />
+
+
+But in the magic window it shows DRC as clean.
+
+
+<img width="940" height="348" alt="image" src="https://github.com/user-attachments/assets/23d4aaae-5316-4447-9129-340b618b6288" />
+
+
+The batch script runs drc in “full” mode. That’s why well connection error while a normal layout takes in “fast” mode.
+
+
+<img width="940" height="353" alt="image" src="https://github.com/user-attachments/assets/24316353-0c7e-4e33-bc01-9aecb476fa2a" />
+
+
+Now to check the reason, select the cell & type
+
+
+```
+% drc why
+```
+
+<img width="940" height="339" alt="image" src="https://github.com/user-attachments/assets/75298bff-4dfb-4a8e-b214-b4da04981eb5" />
+
+
+<img width="940" height="342" alt="image" src="https://github.com/user-attachments/assets/accf1d4d-dcc9-425a-a585-1437ce5b7bf4" />
+
+
+After placing tapcell, the DRC violations are gone.
+
+
+</details>
+
+<details>
+<summary><b>L6 - Setup For LVS</b></summary>
+
+
+```
+cp /usr/share/pdk/sky130A/libs.tech/netgen/sky130A_setup.tcl ./setup.tcl
+```
+
+<img width="940" height="358" alt="image" src="https://github.com/user-attachments/assets/c9a6ecca-7e5e-4c6f-89cb-d4b1e3e82fe8" />
+
+
+```
+% netgen -batch lvs "../magic/sky130_fd_sc_hd__and2_1.spice sky130_fd_sc_hd__and2_1" "/usr/share/pdk/sky130A/libs.ref/sky130_fd_sc_hd/spice/sky130_fd_sc_hd.spice sky130_fd_sc_hd__and2_1"
+```
+
+
+</details>
+
+<details>
+<summary><b> L7 - Setup For XOR</b></summary>
+
+
+<img width="940" height="432" alt="image" src="https://github.com/user-attachments/assets/b2f1b2b1-7ceb-4124-b254-2adc0599c46a" />
+
+
+<img width="940" height="444" alt="image" src="https://github.com/user-attachments/assets/46d0d064-e3c7-4974-8f59-5d90da6129c3" />
+
+</details>
+
+
+# Day 3 - Front-End and Back-End Verification Concepts
+
+### PV_D3SK1 - Introduction to DRC rules
+
+<details>
+<summary><b>L1 - Introduction To Basic Silicon Manufacturing Process</b></summary>
+
+
+<img width="701" height="457" alt="image" src="https://github.com/user-attachments/assets/0db70d3a-e1ee-451b-ba3b-ec4917e31bd0" />
+
+
+The planar silicon manufacturing process is the foundation of modern CMOS fabrication, where semiconductor devices and interconnects are built layer by layer on a flat silicon wafer. The process begins with a P-type substrate, followed by the formation of an N-well for PMOS devices. Source and drain regions are created through ion implantation, while polysilicon is deposited to form the transistor gates. After insulating oxide layers are added, Metal 1 is used for the first level of routing, and vias provide vertical connections to higher metal layers such as Metal 2. This layered and planar approach enables precise device fabrication, reliable electrical interconnections, and the high integration density required for modern VLSI circuits.
+
+
+<img width="940" height="1411" alt="image" src="https://github.com/user-attachments/assets/b50f3601-2664-426c-befe-a509cdf02bbe" />
+
+
+<img width="940" height="627" alt="image" src="https://github.com/user-attachments/assets/2c386527-3778-460e-a948-dabcf8145a5e" />
+
+</details>
+
+<details>
+<summary><b>L2 - Backend Metal Layer Rules</b></summary>
+
+**Minimum width:** Because below this, the routing wires might become fragile & results in short circuit.
+
+<img width="648" height="542" alt="image" src="https://github.com/user-attachments/assets/affd5141-14a2-4199-878c-b568a23ec079" />
+
+**Spacing:** If no proper spacing, then shorts can happen.
+
+
+<img width="719" height="554" alt="image" src="https://github.com/user-attachments/assets/b05de471-df95-46b5-b98a-f9d6f2f845ab" />
+
+
+<img width="860" height="604" alt="image" src="https://github.com/user-attachments/assets/82490628-999d-40df-a47b-7aef57b4fa15" />
+
+
+<img width="706" height="589" alt="image" src="https://github.com/user-attachments/assets/3a029bc4-dc27-4210-b5a2-b82a7bebe1f0" />
+
+
+<img width="903" height="598" alt="image" src="https://github.com/user-attachments/assets/41e18cb9-114c-44ce-83fd-f4caebaa40aa" />
+
+
+<img width="819" height="445" alt="image" src="https://github.com/user-attachments/assets/305358fe-8556-47b4-8a47-0250fd74ea20" />
+
+
+<img width="791" height="476" alt="image" src="https://github.com/user-attachments/assets/2dd23e4e-6d33-40a3-abfb-b34f867ea216" />
+
+
+<img width="747" height="589" alt="image" src="https://github.com/user-attachments/assets/2918ad87-2638-4df2-87a6-41d04e339129" />
+
+These are the cuts on the oxide of the below layer(here on metal 1, when metal 2 must be connected.
+
+
+<img width="876" height="632" alt="image" src="https://github.com/user-attachments/assets/be839d49-f537-42cd-a5d6-dec95bde7cd0" />
+
+
+<img width="859" height="617" alt="image" src="https://github.com/user-attachments/assets/45d6a3c1-c826-4fe1-8819-e2583a3d0ed7" />
+
+
+<img width="789" height="592" alt="image" src="https://github.com/user-attachments/assets/6f176a81-49c2-4bbf-8114-924d35d1c334" />
+
+
+</details>
+
+<details>
+<summary><b>L3 - Local Interconnect Rules</b></summary>
+
+<img width="867" height="581" alt="image" src="https://github.com/user-attachments/assets/b6983d29-c48b-4cdd-ac76-f9259389fd42" />
+
+
+Local interconnect is a new concept in sky water pdks. Mostly after poly, through a contact metal 1 will be the next routing layer. But in skywater pdk, there is another layer made of TiN which lies between poly & Metal 1. Since its resistance is high, it should be used as a short wire only. 
+
+
+<img width="713" height="506" alt="image" src="https://github.com/user-attachments/assets/37c31bf6-9e80-49cc-833a-dd67a1053534" />
+
+
+</details>
+
+<details>
+<summary><b>L4 - Front-End Rules, Transistors Implants, ID and Boundary Layers, Wells And Same Net Rules</b></summary>
+
+
+<img width="940" height="501" alt="image" src="https://github.com/user-attachments/assets/20cdd60f-c2e2-4470-b8c3-f49410348c0e" />
+
+
+<img width="756" height="525" alt="image" src="https://github.com/user-attachments/assets/4bb3e4dd-3c3e-48a4-901a-c15b505bd56b" />
+
+
+<img width="940" height="627" alt="image" src="https://github.com/user-attachments/assets/99fdf365-89bb-4197-b750-b702856d240a" />
+
+Note: An AI created image.
+
+
+<img width="726" height="442" alt="image" src="https://github.com/user-attachments/assets/2644e769-512a-4ff1-a6cf-027246a22486" />
+
+
+<img width="717" height="359" alt="image" src="https://github.com/user-attachments/assets/3ec67f7e-2cf4-40a9-b184-66b6527aaecf" />
+
+
+<img width="940" height="475" alt="image" src="https://github.com/user-attachments/assets/db9c2f64-c327-485a-a5a8-c0b5218599f5" />
+
+
+</details>
+
+<details>
+<summary><b>L5 - Deep N-Well And High Voltage Rules</b></summary>
+
+
+<img width="767" height="554" alt="image" src="https://github.com/user-attachments/assets/7b4b47ff-e0d8-4c97-b5fb-46836feab138" />
+
+
+In this normal CMOS, the pmos is protected from the substrate noise (the noise generated from other devices connected to the substrate). But at the same time. Nmos is connected to the substrate & the noise will directly get coupled to nmos. Inorder to avoid this, we introduce another layer names, deep nwell into this.
+
+
+<img width="940" height="563" alt="image" src="https://github.com/user-attachments/assets/caf7e19e-c9d7-400d-81c8-1a9583dfaddf" />
+
+
+<img width="940" height="552" alt="image" src="https://github.com/user-attachments/assets/964608d0-7710-4291-b646-60f8ff9dd22e" />
+
+
+<img width="760" height="578" alt="image" src="https://github.com/user-attachments/assets/cefe4c47-ac18-4dbd-aa4f-077a98a59937" />
+
+
+<img width="882" height="553" alt="image" src="https://github.com/user-attachments/assets/a92f55b5-73b1-4d86-bae1-52e278772536" />
+
+
+<img width="742" height="642" alt="image" src="https://github.com/user-attachments/assets/023cdd21-acde-43ed-8781-3108a301a389" />
+
+
+<img width="731" height="626" alt="image" src="https://github.com/user-attachments/assets/7ff44c7c-5c68-4efe-8bc3-be0f0f6f9527" />
+
+
+</details>
+
+<details>
+<summary><b>L6 - Device Rules</b></summary>
+
+
+<img width="1024" height="1536" alt="ChatGPT Image Jul 2, 2026, 04_03_41 PM" src="https://github.com/user-attachments/assets/f94ce0db-3d27-4d79-a6c3-59f53b5e7216" />
+
+## Device Rules – Capacitors & Diodes
+
+Integrated circuits employ different capacitor structures depending on the required capacitance, linearity, voltage range, and application. The commonly used capacitor types are **Varactors**, **MOS Capacitors (MOScap)**, **Vertical Parallel Plate (VPP) Capacitors**, and **Metal-Insulator-Metal (MiM) Capacitors**.
+
+### Varactor
+A **Varactor** is a voltage-controlled capacitor whose capacitance varies with the applied bias voltage. It is formed at the **gate-to-channel interface** and is widely used in RF circuits, Voltage-Controlled Oscillators (VCOs), and Phase-Locked Loops (PLLs).
+
+**Design Rules:**
+- Channel Length (L) ≥ **0.18 μm**
+- Channel Width (W) ≥ **1.0 μm**
+- Gate-to-channel interface forms the capacitor.
+
+---
+
+### MOS Capacitor (MOScap)
+A **MOS Capacitor (MOScap)** is formed using the MOS transistor gate. The gate acts as one capacitor plate, while the channel forms the other. In this implementation, the **source and drain terminals are tied together**, and the structure follows the **same DRC rules as a standard MOSFET**. MOScaps are commonly used as **decoupling capacitors (decaps)** and in analog filtering applications.
+
+---
+
+### Vertical Parallel Plate (VPP) Capacitor
+A **Vertical Parallel Plate (VPP) Capacitor** is constructed using multiple parallel metal fingers. The capacitance is mainly generated due to the **sidewall capacitance** between adjacent metal fingers.
+
+**Key Points:**
+- Multiple metal layers are used to increase capacitance.
+- Metal **width** and **spacing** must satisfy standard DRC rules.
+- Commonly used in analog layouts requiring higher capacitance density and better matching.
+
+---
+
+### Metal-Insulator-Metal (MiM) Capacitor
+A **Metal-Insulator-Metal (MiM) Capacitor** consists of two metal plates separated by a thin dielectric layer, providing highly linear and accurate capacitance.
+
+**Design Rules:**
+- MiM capacitor width ≥ **1.0 μm**
+- MiM capacitor must surround **Via3** by **≥ 0.14 μm**
+
+MiM capacitors are widely used in **precision analog**, **RF**, and **mixed-signal circuits** due to their excellent matching and linearity.
+
+---
+
+### Diodes
+The diode shown is implemented using an **N-diffusion to substrate junction**, where the diffusion region and substrate naturally form a **parasitic PN junction**. Such structures are commonly utilized for **ESD protection**, **voltage clamping**, and other protection circuits.
+
+---
+
+### Summary
+
+| Device | Key Design Rule | Purpose |
+|---------|-----------------|---------|
+| **Varactor** | L ≥ 0.18 μm, W ≥ 1.0 μm | Voltage-dependent capacitor |
+| **MOScap** | Follows MOSFET DRC rules | Decoupling and analog capacitor |
+| **VPP Capacitor** | Follow metal width & spacing rules | Sidewall capacitance using metal fingers |
+| **MiM Capacitor** | Width ≥ 1.0 μm, Surround Via3 ≥ 0.14 μm | High-precision linear capacitor |
+| **Diode** | Follow diode/device rules | Protection and parasitic diode structures |
+
+> **Note:** The figures presented in this section are **adapted from the lecture screenshots** used in the course. They have been **reorganized, annotated, and enhanced using AI** to improve clarity and readability while preserving the original technical concepts. The original layouts and teaching material belong to their respective instructor.
+
+
+</details>
+
+<details>
+<summary><b>L7 - Miscellaneous Rules Latch-up Antenna Stress Rules</b></summary>
+
+
+<img width="934" height="592" alt="image" src="https://github.com/user-attachments/assets/97740354-5dc5-4984-92f9-540e8fb4d223" />
+
+
+
+<img width="742" height="600" alt="image" src="https://github.com/user-attachments/assets/a38d868e-1892-404a-b420-329719d5cf78" />
+
+
+Latch-up is an undesirable condition in CMOS integrated circuits where a low-resistance path is unintentionally formed between the power supply (VDD) and ground (VSS) due to the activation of parasitic PNPN structures inherent in the CMOS process. This results in excessive current flow, which can lead to circuit malfunction, overheating, and permanent device damage if not interrupted. Latch-up can be triggered by voltage spikes, substrate noise, or electrostatic discharge (ESD). To improve latch-up immunity, CMOS layouts incorporate design techniques such as guard rings, well and substrate contacts, proper device spacing, and adherence to foundry-defined design rules.
+
+
+<img width="1199" height="1312" alt="ChatGPT Image Jul 2, 2026, 04_11_59 PM" src="https://github.com/user-attachments/assets/6e10e1e5-12e9-4998-bb45-9c8a226eaed2" />
+
+
+
+## Antenna Rules
+
+The **Antenna Effect** occurs during IC fabrication when long metal interconnects accumulate electrical charge during plasma etching. If the accumulated charge is connected only to a MOS transistor gate, it can discharge through the thin gate oxide, causing permanent oxide damage and reducing device reliability. To prevent this, foundries define **Antenna Rules** that limit the amount of metal connected to a gate during intermediate fabrication steps.
+
+The infographic illustrates the complete antenna rule concept, beginning with the cause of the antenna effect, followed by examples of how antenna violations occur during fabrication, and finally the commonly used techniques for eliminating these violations.
+
+### Key Concepts
+
+- Long metal routing connected only to a transistor gate behaves like an **antenna**, collecting plasma-induced charge during fabrication.
+- Although the completed layout may appear electrically safe, intermediate fabrication stages can temporarily leave the gate connected to an isolated metal segment, making it vulnerable to charge accumulation.
+- Antenna rule checking is based on the **antenna ratio**, which limits the amount of metal connected to a transistor gate relative to the gate oxide area.
+- Excessive antenna ratio can result in **gate oxide breakdown**, permanently damaging the transistor.
+- A common solution is to connect an **antenna diode**, providing a discharge path for accumulated charge through the diffusion junction.
+- Another widely used solution is the **metal jumper technique**, where the routing transitions to a higher metal layer early, reducing the lower-metal area connected to the gate.
+- Standard-cell libraries typically include **antenna diodes on input pins** to improve protection against plasma-induced charging.
+
+### Summary
+
+| Topic | Description |
+|--------|-------------|
+| Antenna Effect | Plasma-induced charge accumulation on isolated metal connected to a MOS gate |
+| Main Risk | Gate oxide damage due to charge discharge |
+| Antenna Rule | Limits the metal-to-gate antenna ratio |
+| Fix 1 | Add an antenna diode to safely discharge accumulated charge |
+| Fix 2 | Use metal jumpers to higher metal layers to reduce antenna ratio |
+| Standard Practice | Digital standard-cell inputs generally include antenna protection diodes |
+
+> **Note:** The concepts presented in the infographic are **adapted from the lecture screenshots** of the VSD workshop/course. The original lecture material belongs to its respective instructor(s). The infographic included in this repository has been **generated and enhanced using AI** by reorganizing and annotating the lecture content into a concise study aid for educational purposes.
+
+
+</details>
+
+<details>
+<summary><b>L8 - Density Rules</b></summary>
+
+
+Polishing in VLSI manufacturing refers to the Chemical Mechanical Polishing (CMP) process, which is used to flatten (planarize) the wafer surface after the deposition of materials such as silicon dioxide (SiO₂), metals, or other dielectric layers. CMP combines chemical reactions with mechanical abrasion to remove excess material, resulting in a smooth and uniform surface for subsequent fabrication steps.
+
+
+<img width="739" height="534" alt="image" src="https://github.com/user-attachments/assets/753efa20-9c44-4bb3-9680-22b55f688360" />
+
+So before polishing, the metal layers should be uniform in the surface. In this figure when there is a gap between two metal layers & polishing is been done, we can see some bump on the overall layer.
+
+
+<img width="734" height="532" alt="image" src="https://github.com/user-attachments/assets/e56a33be-59e3-481b-aa3a-adf680a93f1b" />
+
+
+But as see if there are some fills metal & then polishing been done, the surface becomes flat.
+But for analog circuits, it will create unwanted capacitances & it becomes very difficult to tackle. So that time we use a fill blockage layer where these filler cells should not be added.
+
+
+</details>
+
+<details>
+<summary><b>L9 - Recommended Rules, Manufacturing Rules and ERC Rules</b></summary>
+
+
+<img width="791" height="585" alt="image" src="https://github.com/user-attachments/assets/cc422700-2168-497a-ac6d-14734c08c214" />
+
+
+## Rules for Production vs. Test
+
+### 1. Manufacturing Rules (Production Rules)
+
+> **Any violation of these rules results in immediate rejection of the layout by the foundry.**
+
+These rules ensure that the layout can be fabricated reliably.
+
+#### Types of Manufacturing Rules
+
+* **Width Rules**
+
+  * Specify the minimum and maximum width of layout geometries (metal, poly, diffusion, etc.).
+  * Prevent open circuits and fabrication defects.
+
+* **Spacing (Notch) Rules**
+
+  * Define the minimum spacing between adjacent geometries.
+  * Include notch rules to prevent narrow gaps that are difficult to manufacture.
+
+* **Minimum Area Rules**
+
+  * Ensure every polygon has a minimum allowable area.
+  * Prevent incomplete pattern formation during fabrication.
+
+* **Overlap (Surround) Rules**
+
+  * Specify how much one layer must surround another.
+  * Example: Contact must be sufficiently enclosed by metal.
+
+* **Extension Rules**
+
+  * Define the minimum extension of one layer beyond another.
+  * Example: Metal must extend beyond a via by a specified amount.
+
+* **Angle and Off-Grid Rules**
+
+  * Restrict illegal angles (other than allowed angles like 45° or 90°).
+  * Ensure all layout objects lie on the manufacturing grid.
+
+* **Density Rules (Rarely)**
+
+  * Control the percentage of material present in a region.
+  * Used to maintain uniform polishing and fabrication quality.
+
+---
+
+## Rule Waivers
+
+### Manufacturing Waiver
+
+A **manufacturing waiver** is a formal declaration by the customer stating that:
+
+* The layout is **known to violate** a particular manufacturing rule.
+* The customer accepts the associated risks.
+* The **foundry is not responsible** for any failures or issues caused by that violation.
+
+> Rule waivers are granted only in exceptional situations and are generally avoided in production designs.
+
+---
+
+## ERC (Electrical Rule Checks)
+
+ERC verifies the **electrical reliability** of the design rather than just its physical geometry.
+
+### Common ERC Checks
+
+* **Electromigration (Maximum Current Density)**
+
+  * Ensures that metal wires do not carry current beyond their safe limit.
+  * Excessive current density can cause metal atoms to migrate, eventually leading to open circuits.
+
+* **Overvoltage Conditions**
+
+  * Detects nets or devices operating above their allowable voltage limits.
+  * Prevents oxide breakdown and long-term device reliability issues.
+
+---
+
+
+| Category                      | Purpose                             | Examples                                                         |
+| ----------------------------- | ----------------------------------- | ---------------------------------------------------------------- |
+| **Manufacturing Rules (DRC)** | Ensure the layout is manufacturable | Width, Spacing, Minimum Area, Overlap, Extension, Angle, Density |
+| **Manufacturing Waiver**      | Accept a known rule violation       | Customer takes responsibility; foundry is not liable             |
+| **ERC**                       | Ensure electrical reliability       | Electromigration, Overvoltage checks                             |
+
+</details>
+
+
+### PV_D3SK2 - Labs for all DRC rules
+
+
+
+<details>
+<summary><b>L1 - Lab For Width Rule And Spacing Rule</b></summary>
+
+```
+% git clone https://github.com/RTimothyEdwards/vsd_drc_lab.git
+% ./run_magic
+```
+
+File->open
+
+<img width="940" height="443" alt="image" src="https://github.com/user-attachments/assets/6a2a9644-1a10-4543-852b-6ea877c3ea4c" />
+
+<img width="940" height="378" alt="image" src="https://github.com/user-attachments/assets/f1b9bb8b-6cd6-444f-afb2-fd0107139d69" />
+
+<img width="940" height="364" alt="image" src="https://github.com/user-attachments/assets/5250cfd0-dce3-4fae-9252-52da626ac0c3" />
+
+
+To get the error, put the cursor in the layout window near the error region & press “?”. It will automatically give the error message in the console.
+
+
+<img width="417" height="564" alt="image" src="https://github.com/user-attachments/assets/b73fd716-2f35-4e41-8b4e-9b0f5e96c36d" />
+
+
+The white dot rectangle is the region to which the metal should be extended. That is from the left side of the pink metal rectangle to the right end of the white rectangle will be 0.14 u (error message).
+
+
+<img width="940" height="365" alt="image" src="https://github.com/user-attachments/assets/c30312e1-73f6-49b7-b4a8-42a8034adb35" />
+
+
+To get the dimensions:
+
+```
+% Select the region (“s” key) then press “b”
+```
+
+
+<img width="940" height="346" alt="image" src="https://github.com/user-attachments/assets/3005fb22-a076-4d72-b413-9746119a65c3" />
+
+
+For grid lines select 0.10u.
+
+
+<img width="940" height="346" alt="image" src="https://github.com/user-attachments/assets/386c755f-1cdb-4065-beb7-a081788a2a42" />
+
+
+To remove the error. Select the whole rectangle including the white one. Hover the cursor on the region, press middle button(painting). Then the pink metal 2 will expand to the white one. This will make the width as 0.14u. This is a manual method.
+
+
+<img width="940" height="345" alt="image" src="https://github.com/user-attachments/assets/27d5f467-ae07-4cbf-9ddd-d0290d491bf9" />
+
+
+Select the box, press “:” to get the access to the console. Then type these
+
+```
+% box width 0.14um
+% paint m2
+```
+
+
+For the next cell: Spacing Rule:
+
+<img width="940" height="326" alt="image" src="https://github.com/user-attachments/assets/251b8e6d-64a0-47fb-9b29-5e5abb518e17" />
+
+
+<img width="940" height="411" alt="image" src="https://github.com/user-attachments/assets/b7a98719-29bc-4f1b-9527-38461fe76e87" />
+
+
+Press the second box, then press the “^” key (number 6) to move to right.
+
+</details>
+
+<details>
+<summary><b>L2-Lab For Wide Spacing Rule And Notch Rule</b></summary>
+
+**Wide spacing rule**
+
+<img width="940" height="343" alt="image" src="https://github.com/user-attachments/assets/2eaf796f-7323-46ef-91a4-87c23ec22058" />
+
+
+<img width="940" height="456" alt="image" src="https://github.com/user-attachments/assets/74e61c53-372a-4c9e-abea-8c435940f896" />
+
+
+After the wide metal spacing is solved, the drc errors are gone.
+
+**Notch rule :**
+
+
+<img width="940" height="398" alt="image" src="https://github.com/user-attachments/assets/1be21c57-e096-4456-b239-83212a72ef51" />
+
+
+For notch, select the area, then press “a” to get the area. Then press “8” (number key to move up). For normal stretching, we can use:
+
+
+<img width="248" height="60" alt="image" src="https://github.com/user-attachments/assets/3f850b87-05a9-4c27-9004-2cf2c2a9a463" />
+
+
+</details>
+
+<details>
+<summary><b>L3 - Lab For Via Size, Multiple Vias, Via Overlap and Autogenerate Vias</b></summary>
+
+
+**Exercise_2a via_size**
+
+<img width="940" height="473" alt="image" src="https://github.com/user-attachments/assets/713f4691-3407-444e-9b4e-3e6d855fd6eb" />
+
+
+After stretching the via error is gone.
+
+**Exercise_2b Multiple Vias**
+
+
+<img width="940" height="368" alt="image" src="https://github.com/user-attachments/assets/38003918-4d75-4cb9-a2e9-6f200c757191" />
+
+
+To see the via cuts we need to know the name of the via. This can be obtained from the documentation. Here the via is between the interconnect layer and the M1. Its name is MCON. 
+
+
+```
+% cif see MCON
+% cif see MCON
+% feedback why
+CIF layer "MCON"
+% feeedback clear
+% feedback clear
+```
+
+
+**Exercise_2c Via overlap**
+
+
+<img width="940" height="334" alt="image" src="https://github.com/user-attachments/assets/f3922a47-812b-4410-bc6c-d678565213d6" />
+
+
+<img width="940" height="339" alt="image" src="https://github.com/user-attachments/assets/d62d7bde-3c1a-4fd3-a8dc-e5276ebd0685" />
+
+
+Select the M1 square & extend the edges by 0.03 um.
+
+**Exercise_2d Auto generate Via**
+
+
+<img width="401" height="370" alt="image" src="https://github.com/user-attachments/assets/c461b88a-7004-47ec-9e91-def328889324" />
+
+
+Press the “space key” for wiring. But if need to change the wire to other metal, press “shift” without leaving the mouse. This will generate a auto via and jumps to next metal.
+
+
+</details>
+
+<details>
+<summary><b>L4 - Lab For Minumum Area Rule And Minimum Hole Rule</b></summary>
+
+
+**Exercise_3a Minimum area rule**
+
+
+<img width="940" height="370" alt="image" src="https://github.com/user-attachments/assets/b542750d-8b94-42c0-8270-d38b9583f07e" />
+
+
+<img width="940" height="658" alt="image" src="https://github.com/user-attachments/assets/97556582-d18a-4411-a111-e99d5695395e" />
+
+
+Strech the box to increase the area.
+
+
+<img width="940" height="377" alt="image" src="https://github.com/user-attachments/assets/485f6b97-68a6-4ce8-b435-1d112add9fd0" />
+
+
+To jump to M2 from li, drag shift+ 2 times left mouse button, again drag.
+
+
+<img width="940" height="589" alt="image" src="https://github.com/user-attachments/assets/131466ed-24aa-4586-a069-ea37396bb3d6" />
+
+
+**Exercise_3B Minimum Hole Rule**
+
+
+<img width="940" height="460" alt="image" src="https://github.com/user-attachments/assets/8b73db06-1a08-441b-8e09-79654dbc7f86" />
+
+
+<img width="940" height="334" alt="image" src="https://github.com/user-attachments/assets/f246c43f-a3c2-47da-9e4f-1d09e60eb2b6" />
+
+
+<img width="940" height="375" alt="image" src="https://github.com/user-attachments/assets/28f0ffcd-9071-4546-8b24-7a128f584678" />
+
+
+Now inorder to increase the hole area, we can erase some metal1 portion.
+
+
+<img width="940" height="378" alt="image" src="https://github.com/user-attachments/assets/e3b9fa62-2b15-4caa-b938-ee0f17b502a7" />
+
+
+<img width="940" height="331" alt="image" src="https://github.com/user-attachments/assets/96ab0a43-809b-47a6-86ab-cb790ac532ad" />
+
+
+After erasing, the drc error goes away.
+
+
+</details>
+
+<details>
+<summary><b>L5 - Lab For Wells And Deep N-Well</b></summary>
+
+
+**Exercise_4a wells**
+
+<img width="940" height="386" alt="image" src="https://github.com/user-attachments/assets/fa97ecd7-0c00-4a88-9222-af895f955a57" />
+
+
+n-well need a n-tap which can connect it to corresponding potential. N-tap is made of n-diff layer. So we need to draw a n-diff layer. Then usually the contact should be made till the “li” layer. But right now we don’t need that.
+
+
+<img width="940" height="327" alt="image" src="https://github.com/user-attachments/assets/587a26a8-ed24-4008-b1b8-c5ff830925e3" />
+
+
+So the compromise in contact can be made by using the contact “nsubstratencontact”.
+
+
+<img width="940" height="311" alt="image" src="https://github.com/user-attachments/assets/80f731da-1d92-4b5c-a402-4e3023e07e68" />
+
+
+<img width="514" height="428" alt="image" src="https://github.com/user-attachments/assets/22ddaacf-edf4-4fff-9e0a-e033e85c6f27" />
+
+
+**Exercise_4b wells**
+
+
+<img width="940" height="422" alt="image" src="https://github.com/user-attachments/assets/3a2b6e01-3d46-43bc-84f1-e60e63ac0385" />
+
+
+<img width="940" height="379" alt="image" src="https://github.com/user-attachments/assets/d9747799-5b83-438b-b95a-728f17ab607c" />
+
+
+**Exercise_4c deep nwell**
+
+
+<img width="940" height="389" alt="image" src="https://github.com/user-attachments/assets/1b316fd8-899b-411c-b8dd-cec70de756fc" />
+
+
+After stretching,
+
+
+<img width="940" height="394" alt="image" src="https://github.com/user-attachments/assets/2c9dbe74-8ade-4fc3-a947-d3c6fd3af245" />
+
+
+<img width="940" height="467" alt="image" src="https://github.com/user-attachments/assets/e730d241-e883-4eda-8d34-c25271bbb16a" />
+
+
+</details>
+
+<details>
+<summary><b>L6 - Lab For Derived Layers</b></summary>
+
+
+**Exercise_5a derived layers**
+
+
+<img width="940" height="371" alt="image" src="https://github.com/user-attachments/assets/ec1addd7-21f6-445f-9e71-e98a2334ee36" />
+
+
+<img width="940" height="411" alt="image" src="https://github.com/user-attachments/assets/d8d4982b-6ab0-4738-a1d5-f06b6e5eee37" />
+
+
+<img width="940" height="648" alt="image" src="https://github.com/user-attachments/assets/f5e0219a-0f6e-412f-94f6-a672f3a44af7" />
+
+
+**Exercise_5b**
+
+
+<img width="940" height="416" alt="image" src="https://github.com/user-attachments/assets/e2b99735-f263-479c-9183-7c8bfe040398" />
+
+
+**Exercise_5c**
+
+
+<img width="940" height="208" alt="image" src="https://github.com/user-attachments/assets/c235fe39-e2e0-497f-b62b-a9c9d15d12cc" />
+
+
+</details>
+
+<details>
+<summary><b>L7 - Lab For Paramterized And PDK Devices</b></summary>
+
+
+Since there are sub cells, first select “s”, then “x” to expand.
+
+
+**Exercise_6a Parametrised cells**
+
+
+<img width="940" height="533" alt="image" src="https://github.com/user-attachments/assets/ae2ac51e-ba25-4140-b38b-4ddc0556efa3" />
+
+
+Even though it’s a parametrised cell whose layout is scalable, we can find metal 1 area errors. This is intentionally not solved because once this device is used somewhere for some routing purpose, we will draw metal line over it & it will be gone.
+
+
+<img width="940" height="445" alt="image" src="https://github.com/user-attachments/assets/d8a1bf5e-6758-4a50-9829-bad631787aa4" />
+
+
+<img width="940" height="425" alt="image" src="https://github.com/user-attachments/assets/38162a56-d28c-439c-a790-aec99047c4b4" />
+
+
+
+</details>
+
+<details>
+<summary><b>L8 - Lab For Angle Error And Overlap Rule</b></summary>
+
+
+<img width="940" height="362" alt="image" src="https://github.com/user-attachments/assets/8a917cc1-7ca2-4454-aebe-643a0884f59c" />
+
+
+<img width="940" height="387" alt="image" src="https://github.com/user-attachments/assets/37b1032e-69c6-4f98-a207-4e00250e1680" />
+
+
+<img width="940" height="372" alt="image" src="https://github.com/user-attachments/assets/34e136b2-f101-417d-a632-a85c3cb981b5" />
+
+
+<img width="940" height="314" alt="image" src="https://github.com/user-attachments/assets/79c37267-30d9-485b-9a2f-c6554416994e" />
+
+
+</details>
+
+<details>
+<summary><b>L9 - Lab For Unimplemented Rules</b></summary>
+
+
+Sealring is used to protect the chip from outside catastrophes.
+Sealring generation: w=2000 l=2000
+
+
+<img width="940" height="278" alt="image" src="https://github.com/user-attachments/assets/168cc738-d27c-44a7-87f6-b8eac19c5a3c" />
+
+
+<img width="940" height="396" alt="image" src="https://github.com/user-attachments/assets/e5f212a9-a070-4a89-ae1f-c301b747ee35" />
+
+
+This the seal ring which is generated through scripts.
+
+
+```
+quit : quit the magic, go to the same terminal where we created sealring
+% ./gds_magic
+```
+
+
+<img width="940" height="412" alt="image" src="https://github.com/user-attachments/assets/fc3e8a8f-9aa5-418b-ac94-08dab7166211" />
+
+
+<img width="940" height="452" alt="image" src="https://github.com/user-attachments/assets/2e224271-89f2-4f39-b435-f3b91ac8aa80" />
+
+
+Before it was abstract view, now in the gds view, we could see layers.
+
+
+</details>
+
+<details>
+<summary><b>L10 - Latch-up And Antenna Rules</b></summary>
+
+
+<img width="940" height="347" alt="image" src="https://github.com/user-attachments/assets/3478e156-4503-4d58-9aae-6e1c30e52c32" />
+
+
+<img width="940" height="465" alt="image" src="https://github.com/user-attachments/assets/7f9fa3ae-2ba1-469d-aeda-4026d37b748a" />
+
+
+For electrical rule checks, first the layout has to be extracted.
+
+
+```
+% extract do local
+% extract all
+% antennacheck
+```
+
+
+<img width="940" height="415" alt="image" src="https://github.com/user-attachments/assets/d3b0a867-99b8-4514-af63-a4e76ebd265e" />
+
+
+<img width="940" height="434" alt="image" src="https://github.com/user-attachments/assets/c14dc3be-42be-4fcf-ac54-223a5e211973" />
+
+
+<img width="940" height="460" alt="image" src="https://github.com/user-attachments/assets/8bcb9124-98ae-45d4-a2da-9726dc930f8d" />
+
+
+Inorder to avoid antenna violations(due to long m2), we can directly connect this metal2 to a diffusion diode which will expel the excess charge.
+
+
+<img width="940" height="438" alt="image" src="https://github.com/user-attachments/assets/ea8db2f3-66e2-41e5-b59b-1b6932f28ddb" />
+
+
+<img width="940" height="415" alt="image" src="https://github.com/user-attachments/assets/b2671269-99f4-4026-8a61-debae4b6439a" />
+
+
+<img width="940" height="430" alt="image" src="https://github.com/user-attachments/assets/4401e537-020b-47a0-8ba6-0daf1c65f89c" />
+
+
+Removing M3 & routing via M1 removes antenna violation. Because M3 is fabricated after M2, so all the metal ions which will be accumulated on a M2 layer creates a huge area to be connected to the gate. But when M1 is get connected, since its fabricated first, no charge accumulation occurs.
+Removing the Metal 3 (M3) segment and routing the connection through Metal 1 (M1) eliminates the antenna violation. Since Metal 1 is fabricated before the higher metal layers, the gate is connected earlier in the manufacturing process, preventing excessive plasma charge from accumulating on a large floating conductor. If the connection is made through M3, the lower metal layers (such as M1 and M2) remain electrically connected to the gate but are not yet connected to the higher routing, allowing plasma-induced charge to build up during fabrication. This increases the effective metal area connected to the gate and raises the antenna ratio. Routing through M1 provides an earlier discharge path, thereby reducing charge accumulation and eliminating the antenna violation.
+
+
+</details>
+
+<details>
+<summary><b>L11 - Lab For Density Rules</b></summary>
+
+
+<img width="860" height="579" alt="image" src="https://github.com/user-attachments/assets/21bb1c44-6438-4191-a81c-476df067c9f8" />
+
+Metal 1 is under-dense, whereas Metal 2 is over-dense.
+
+<img width="940" height="430" alt="image" src="https://github.com/user-attachments/assets/dfcc4bbb-eafd-46f1-94ce-9643a43d620b" />
+
+
+<img width="940" height="269" alt="image" src="https://github.com/user-attachments/assets/33db8615-060a-428f-b604-6543a80954c4" />
+
+
+<img width="940" height="421" alt="image" src="https://github.com/user-attachments/assets/4f8244f7-2dd6-4ae4-aecd-a7f637bbbf00" />
+
+
+<img width="940" height="418" alt="image" src="https://github.com/user-attachments/assets/ade34aba-be31-4863-a1d9-ea31847caa4f" />
+
+
+<img width="940" height="406" alt="image" src="https://github.com/user-attachments/assets/1802d5b9-ef6b-4455-b243-88045759a63b" />
+
+
+<img width="940" height="428" alt="image" src="https://github.com/user-attachments/assets/021d4efc-ccb6-4515-882d-977f79520fb4" />
+
+
+<img width="940" height="414" alt="image" src="https://github.com/user-attachments/assets/3461c407-c681-42fc-a3b2-437883aabcd7" />
+
+
+Select the cell “s” and expand “x”
+
+
+<img width="940" height="433" alt="image" src="https://github.com/user-attachments/assets/92d30b6b-eb3e-4d0f-9d57-e6d1757eb0c3" />
+
+
+<img width="940" height="431" alt="image" src="https://github.com/user-attachments/assets/f9afe509-7583-4021-af20-4660890cab86" />
+
+
+</details>
+
+---
+
+# Day 4 - OpenLane and Physical Verification Flow - Additional Content
+
+### PV_D4SK1 - Understanding PNR and physical verification
+
+
+<details>
+<summary><b>L1 - The OpenLANE Flow</b></summary>
+
+
+<img width="940" height="420" alt="image" src="https://github.com/user-attachments/assets/25b4a23f-eb67-4574-a5d1-1be1001ebe23" />
+
+
+The steps used here are explained over here.
+
+
+OpenLane Digital Physical Design Flow:
+
+
+**Synthesis:** During synthesis, the Register Transfer Level (RTL) design written in Verilog is converted into a gate-level netlist using standard cells from the target technology library. In OpenLane, Yosys performs RTL synthesis, while ABC carries out technology mapping and logic optimization to generate an optimized gate-level representation.
+
+
+**Static Timing Analysis (STA):** After synthesis, OpenSTA performs static timing analysis on the generated gate-level netlist to evaluate timing performance. It checks whether the design satisfies setup and hold timing constraints and generates detailed timing reports. At this stage, the analysis assumes ideal clocks, as the actual clock distribution network has not yet been created.
+
+
+**Floorplanning:** Floorplanning defines the physical structure of the chip by determining the core area, placement rows, and routing tracks. It also places the input and output ports, inserts well tap and decoupling capacitor (decap) cells, and generates the Power Distribution Network (PDN) to ensure reliable power delivery throughout the design.
+
+
+**Placement:** During placement, standard cells are positioned within the defined floorplan to minimize wire length and optimize timing, power, and area. The process begins with global placement, followed by optimization steps, and concludes with detailed placement, which legalizes cell locations while ensuring that all placement constraints are satisfied.
+
+
+
+**Clock Tree Synthesis (CTS):** Clock Tree Synthesis is performed using TritonCTS to construct the clock distribution network. The tool inserts clock buffers and builds a balanced clock tree that minimizes clock skew and latency, enabling accurate clock propagation throughout the design. After CTS, the design contains real clocks instead of ideal clocks.
+
+
+**Global Routing:** Global routing, performed by FastRoute, determines the approximate routing paths for all signal nets without generating the final wire geometries. It estimates routing resources, identifies congestion, and prepares the design for detailed routing. Fill insertion is also performed where required to satisfy manufacturing constraints.
+
+
+**Antenna Diode Insertion:** Antenna diode insertion mitigates plasma-induced antenna effects that may damage transistor gate oxides during fabrication. OpenLane supports multiple DIODE_INSERTION_STRATEGY options, including no diode insertion, diode spraying, fake diode replacement, antenna avoidance routing, custom diode insertion scripts, or combinations of these methods, depending on the design requirements.
+
+
+**Detailed Routing:** Detailed routing is carried out using TritonRoute, which converts the global routing solution into an exact physical routing layout while satisfying all design rules. The resulting DEF (Design Exchange Format) file accurately represents the physical placement and routing of the design.
+
+
+**RC Extraction:** After routing, Magic performs resistance and capacitance (RC) extraction to generate a parasitic netlist that includes all layout-induced parasitic effects. This extracted information is used for post-layout static timing analysis, providing the most accurate timing evaluation because it accounts for the physical characteristics of the fabricated layout.
+
+
+**Physical Verification:** Physical verification ensures that the layout is both manufacturable and electrically equivalent to the intended design. Magic performs Design Rule Checks (DRC) and antenna checks, KLayout provides an additional DRC verification, Netgen performs Layout Versus Schematic (LVS) verification, and CVC (Circuit Validity Checker) verifies the electrical correctness of the final circuit.
+
+
+**GDSII Generation:** Once all verification stages are successfully completed, the final layout is streamed out as a GDSII file, which serves as the industry-standard format for IC fabrication. Both Magic and KLayout can generate the final GDSII file, with KLayout often used as a backup stream-out tool.
+
+
+**Configuration (config.tcl):** The config.tcl file contains the configuration parameters that control the OpenLane flow, including synthesis, floorplanning, placement, routing, timing, and verification settings. By modifying these parameters, users can customize the physical design flow to meet the specific requirements of their design.
+
+
+All the information about the project can be found in the openlANE documentation: 
+
+
+https://openlane.readthedocs.io/en/latest/index.html
+
+
+**config.tcl**
+
+This file is necessary for running the openLANE flow and its documentation can be found at: 
+
+
+https://openlane.readthedocs.io/en/latest/reference/configuration.html
+
+________________________________________
+Running the Complete OpenLane Flow (Non-Interactive)
+The complete RTL-to-GDSII implementation can be executed in a single command. This mode automatically performs every stage of the ASIC design flow, including synthesis, floorplanning, placement, clock tree synthesis, routing, physical verification, and finally generates the GDSII and Magic (.mag) layout files.
+export PDK_ROOT=/usr/local/share/pdk
+make mount
+./flow.tcl -design spm -tag run1
+________________________________________
+Running OpenLane in Interactive Mode
+Interactive mode provides the flexibility to execute each stage of the design flow individually. This is particularly useful for understanding each step, debugging issues, and observing intermediate design outputs.
+Launch OpenLane in Interactive Mode
+export PDK_ROOT=/usr/local/share/pdk
+make mount
+./flow.tcl -interactive
+________________________________________
+Initialize the Design Environment
+Load the OpenLane package, prepare the selected design, and create a dedicated run directory for storing all generated outputs.
+package require openlane
+prep -design spm -tag run1
+________________________________________
+Run Logic Synthesis
+Convert the RTL description into a technology-mapped gate-level netlist using the synthesis engine.
+run_synthesis
+________________________________________
+Execute Floorplanning
+Create the chip floorplan by defining the core area, placement rows, routing tracks, power network, and locations for I/O pins and well tap cells.
+run_floorplan
+________________________________________
+Perform Standard Cell Placement
+Place all standard cells within the floorplan while optimizing utilization and ensuring a legal placement.
+run_placement
+________________________________________
+Generate the Clock Tree
+Build a balanced clock distribution network and perform timing analysis using propagated clocks.
+run_cts
+________________________________________
+Optimize Clock Timing
+Improve timing by resizing cells and optimizing critical timing paths after clock tree synthesis.
+run_resizer_timing
+________________________________________
+Perform Signal Routing
+Complete the physical interconnections between all placed standard cells through global and detailed routing.
+run_routing
+________________________________________
+Generate the Powered Verilog Netlist
+Create an updated gate-level netlist containing explicit power and ground connections for subsequent verification stages.
+write_powered_verilog
+set_netlist $::env(lvs_result_file_tag).powered.v
+________________________________________
+Stream Out the GDSII Layout Using Magic
+Generate the final layout database in GDSII format from the routed design.
+run_magic
+________________________________________
+Generate an Alternate GDSII Using KLayout
+Create a second GDSII database using KLayout, which can later be used for layout comparison.
+run_klayout
+________________________________________
+Perform XOR Verification
+Compare the Magic and KLayout generated GDSII files to confirm that both layouts are geometrically identical.
+run_klayout_gds_xor
+________________________________________
+Export the SPICE Netlist
+Extract a transistor-level SPICE netlist from the completed layout for electrical verification.
+run_magic_spice_export
+________________________________________
+Perform LVS Verification
+Compare the extracted SPICE netlist with the synthesized Verilog netlist to verify logical and electrical equivalence.
+run_lvs
+________________________________________
+Execute Design Rule Checking (DRC)
+Verify that the completed layout satisfies all technology-specific design rules before fabrication.
+run_magic_drc
+________________________________________
+Run Antenna Checks
+Check the routed layout for antenna violations that may damage transistor gate oxides during fabrication.
+run_antenna_check
+________________________________________
+Perform Circuit Validity Checks (CVC)
+Analyze the design for electrical issues such as floating supplies, incorrect power connections, and other circuit integrity problems.
+run_lef_cvc
+________________________________________
+Generate the Final Summary Report
+Create a consolidated report containing the overall status of synthesis, timing, routing, DRC, LVS, antenna checks, and other verification results.
+generate_final_summary_report
+________________________________________
+
+</details>
+
+---
+
+# Day 5 - Running LVS and Debugging
+
+### PV_D5SK1 - Fundamentals of LVS
+
+<details>
+<summary><b>L1 - Physical Verification Of Extracted Netlist</b></summary>
+
+LVS Preparation
+
+
+- We need to have schematic & layout.
+- There should be 2 netlists each from schematic & layout to compare with.
+-	Mostly the format of these 2 netlist are spice, but it can be Verilog, lef, def or BLIF.
+
+<img width="720" height="610" alt="image" src="https://github.com/user-attachments/assets/9015ab14-1aa2-4b27-9864-21673ed2535e" />
+
+
+If these netlists from layout can be simulated, we will increase the functional & behavioural validation of the silicon chip.
+
+<img width="767" height="613" alt="image" src="https://github.com/user-attachments/assets/dfaa050d-c759-49ac-a9fb-bec612ccadcf" />
+
+
+This is an expected LVS flow in a Digital design flow. As there are no schematic views in Digital Physical Design, all the Physical Design are done by some EDA tool. Here when the RTL code is obtained, synthesis will derive a netlist of out if which will comprise of standard cell library cells. Then the physical design flow will happen. After CTS, buffer insertion etc the netlist will be compatible for LVS (shown as layout compatible in green sign in the figure). After this stage, the tool will place & route the same. This can be followed by some electrical checks such as tap/well insertion, antenna check violations & the complete layout is formed. This netlist will be the one from layout side & can be compared with the former. So, in a Digital Design after Placement & Routing the second comparing netlist will be obtained. There can be mismatches when the actual routing happens. Because of congestions, shorts can happen. This can create a LVS mismatch.
+
+</details>
+
+<details>
+<summary><b>L2 - How LVS Matching Works</b></summary>
+
+<img width="742" height="657" alt="image" src="https://github.com/user-attachments/assets/97c410bb-5cd5-408b-8bd5-64e978122ccc" />
+
+
+Most of the time the schematic hierarchy wont match with layout. Because layout can have extra hierarchical cells or extra cells like guard rings, seal ring etc which wont be a part of schematic. But “netgen” tool which is used for LVS is capable of understanding this hierarchical difference & act accordingly.
+
+
+<img width="688" height="501" alt="image" src="https://github.com/user-attachments/assets/c57fd1f7-e3d4-49a5-b2cb-0fecc21d986a" />
+
+
+In this example for this specific the standard cell, the layout of the standard cell has no tap cells added. This means the well connections are open & we need to add the corresponding tap cells for the connection. But at the same time, in its schematic view the bulk pin connected to VDD/VSS. This means that the substrate and well contacts inside the cell. Actually, this should not happen. But ideally netgen can handle this.
+
+
+<img width="726" height="544" alt="image" src="https://github.com/user-attachments/assets/b67db46e-bd39-4aa1-9674-479be709c605" />
+
+
+A netlist once flattened is very difficult to manage.
+
+
+<img width="909" height="557" alt="image" src="https://github.com/user-attachments/assets/d5760d61-8407-4c49-986c-9be23f45f0bc" />
+
+
+How LVS will work is like, it doesn’t have any idea about the connections or devices. It will check the number of devices in both circuits. Then it will check the number of nets in both circuits. The comparison will be how many devices are connected to a specific net. In this net “d” in schematic connnected to 3 devices where its is connected to 4 devices in layout. There is a mismatch.
+
+
+<img width="940" height="471" alt="image" src="https://github.com/user-attachments/assets/5a4b1169-0027-4186-8788-82ba4e1478cb" />
+
+
+</details>
+
+<details>
+<summary><b>L3 - LVS Netllist Vs Simulation Netlists </b></summary>
+
+
+<img width="940" height="474" alt="image" src="https://github.com/user-attachments/assets/093ad031-a0c8-4a4c-8fef-c93bb1472ae5" />
+
+
+For post layout simulation, the netlists contain RC details also.
+
+
+<img width="895" height="614" alt="image" src="https://github.com/user-attachments/assets/0657306a-8b7c-457e-be8b-f568352dc07d" />
+
+
+This will the comparison or RC inclusion to be considered for post layout simulations.
+
+
+<img width="873" height="607" alt="image" src="https://github.com/user-attachments/assets/fb12101a-2c0b-404a-ac44-67ef7848b140" />
+
+</details>
+
+<details>
+<summary><b>L4 - The Netgen Core Matching Algorithm</b></summary>
+
+
+The way in which netgen works for lvs is based on a partition methodology in flattened mode of checking. But this will become so complex as the number of devices increases.
+
+
+<img width="940" height="468" alt="image" src="https://github.com/user-attachments/assets/8698d2c2-b2a5-40c5-8d1c-110f33012c9e" />
+
+
+</details>
+
+<details>
+<summary><b>L5 - Netgen Prematch Analysis, Hierarchical Checking And Flattening</b></summary>
+
+
+<img width="751" height="554" alt="image" src="https://github.com/user-attachments/assets/ea481f2a-66a9-48a3-8359-a0cae78de9f6" />
+
+
+If the hierarchy completely matches, it will compare like this.
+
+
+<img width="735" height="564" alt="image" src="https://github.com/user-attachments/assets/3639b0a6-5cb7-4d13-8e1a-df16367cf2f0" />
+
+
+If the hierarchy does not match, there will be a LVS mismatch error.
+
+
+<img width="907" height="509" alt="image" src="https://github.com/user-attachments/assets/d1d7e714-00d4-44d7-94ad-3fa74f840d79" />
+
+
+Netgen will deal such mismatches in a such a way that, while comparing if any mismatch for the devices/name happens, then it will go one hierarchy down & check (shown in the above figure).  This is called pre-match analysis.
+
+
+<img width="681" height="551" alt="image" src="https://github.com/user-attachments/assets/3526fe5f-01a4-4ba4-94c5-b56671da6a5a" />
+
+
+## Hierarchical Checking and Flattening
+
+Modern integrated circuit designs are typically created using a **hierarchical approach**, where complex circuits are built by instantiating smaller reusable cells (child cells) inside larger parent cells. During layout verification, however, the physical implementation and the schematic may represent connectivity differently. To accurately compare both representations, LVS (Layout Versus Schematic) tools perform **hierarchical checking** and, when necessary, **flatten the design hierarchy**.
+
+In the example shown, the **layout** connects the transistor bulk terminals to the power and ground rails at the **parent I/O cell level**, whereas the **schematic** connects the transistor bulk terminals inside the **child inverter cell**. Although the electrical connectivity is identical, the hierarchy differs between the two representations.
+
+To avoid reporting false LVS mismatches, verification tools such as **Netgen** automatically **flatten the hierarchy**, temporarily removing the parent-child boundaries and comparing the resulting transistor-level netlists. This ensures that the comparison is based on actual electrical connectivity rather than the hierarchical organization of the design.
+
+### Key Concepts
+
+- **Hierarchical Design:** Large circuits are constructed by instantiating reusable child cells within parent cells.
+- **Layout Hierarchy:** Electrical connections may be implemented at the parent-cell level.
+- **Schematic Hierarchy:** The same connections may be defined inside child cells.
+- **Hierarchy Flattening:** LVS tools temporarily remove hierarchical boundaries and compare the fully expanded transistor-level netlists.
+- **Purpose:** Prevent false LVS errors caused solely by differences in hierarchical organization while ensuring electrical equivalence.
+
+### Advantages of Hierarchical Flattening
+
+- Correctly compares layouts and schematics with different hierarchical structures.
+- Eliminates false mismatches due to parent-child connectivity differences.
+- Enables accurate transistor-level verification.
+- Supports verification of complex hierarchical IC designs.
+
+---
+
+### Summary
+
+| Concept | Description |
+|---------|-------------|
+| **Hierarchical Design** | Design methodology that builds complex circuits using reusable child cells. |
+| **Layout Hierarchy** | Bulk connections are made in the parent cell. |
+| **Schematic Hierarchy** | Bulk connections are defined within the child cell. |
+| **Hierarchy Flattening** | LVS expands hierarchical cells into a flat transistor-level representation before comparison. |
+| **Benefit** | Ensures electrical equivalence despite differences in design hierarchy. |
+
+
+<img width="940" height="578" alt="image" src="https://github.com/user-attachments/assets/d9cc7fab-7c61-42c4-8089-a02afae683dc" />
+
+
+In this situation, when the hierarchy matches but the actual device inside the C has some mismatch, the whole idea of hierarchical check is spoiled, because a lot of flattening has already happened. In such case, we must fix the low-level errors first.
+
+
+<img width="940" height="459" alt="image" src="https://github.com/user-attachments/assets/3b4dd7b1-cdbf-492d-9d1b-fc1f56cbddbd" />
+
+
+If we know already cell c wont match, pass it as an argument not to flatten it. Then the actual comparison will be in cell B & A which will pass. So the report will look cleaner & easier.
+
+
+</details>
+
+<details>
+<summary><b>L6 - Pin Checking And Property Checking</b></summary>
+
+
+<img width="940" height="324" alt="image" src="https://github.com/user-attachments/assets/f7197400-538a-47a9-8483-50127404ff0b" />
+
+
+Netgen don’t care about the net names. It considers that the number of pins should be same & each pin should have an equivalent in the other.
+
+<img width="679" height="604" alt="image" src="https://github.com/user-attachments/assets/ef40d3dd-204a-4873-84e9-bda6765c2842" />
+
+
+<img width="642" height="610" alt="image" src="https://github.com/user-attachments/assets/e3966556-509b-4c7f-9cce-bc76ce82fd88" />
+
+
+<img width="719" height="385" alt="image" src="https://github.com/user-attachments/assets/96f3a3bd-b838-464b-9949-2f460afb0f46" />
+
+
+Property or parameter also should match.
+
+<img width="940" height="470" alt="image" src="https://github.com/user-attachments/assets/396e3a7c-96ca-41b3-bdef-72b8ab9689d9" />
+
+
+</details>
+
+<details>
+<summary><b>L7 - Series Parallel Combining</b></summary>
+
+
+<img width="940" height="482" alt="image" src="https://github.com/user-attachments/assets/e3073110-ae5c-4e99-9aff-5cd7a3e7506e" />
+
+
+During Layout Versus Schematic (LVS) verification, the tool does not simply compare the schematic and layout netlists device by device. Instead, it first performs device reduction by applying equivalence rules to merge devices that are electrically identical. MOSFETs connected in parallel with the same channel length (L) and identical gate, source, drain, and bulk connections are merged into a single transistor by adding their widths (W), since the drain current is proportional to the W/L ratio. This is why multiple smaller transistors in parallel are considered equivalent to one wider transistor. Similarly, capacitors connected in parallel are merged by adding their capacitance values, which is equivalent to adding their plate areas because capacitance is directly proportional to the capacitor area. Resistors can be merged in both series and parallel configurations. For resistors with the same width connected in series, their lengths are added to form an equivalent resistor because resistance is proportional to the length-to-width (L/W) ratio. For identical resistors connected in parallel, the equivalent resistance decreases according to the parallel resistance formula, which is equivalent to increasing the effective width. By applying these device-merging rules before comparison, the LVS tool recognizes electrically equivalent implementations even when the physical layout uses multiple devices instead of a single device in the schematic, allowing optimized layouts to successfully match the intended circuit design.
+
+
+</details>
+
+<details>
+<summary><b>L8 - Symmetry Breaking & L9 - Interpreting Netgen Results</b></summary>
+
+General Rule of Thumb #1
+
+•	Always check device mismatches first. 
+
+
+•	Verify that the number of devices in the schematic and layout match. 
+
+
+•	Check whether the device types (NMOS, PMOS, resistor, capacitor, etc.) are correct. 
+
+
+•	Verify that device properties such as Width (W), Length (L), Multiplier (M), Number of Fingers (NF), and other parameters match. 
+
+
+•	Fix all device mismatches before investigating net mismatches. 
+
+
+•	Once all devices match correctly, proceed to analyze net connectivity mismatches.
+
+
+General Rule of Thumb #2
+
+
+•	Start with the easiest and most obvious errors first. 
+
+
+•	Fix simple issues such as: 
+
+- Missing devices
+- Incorrect device properties (W, L, M, NF) 
+- Wrong pin connections 
+- Missing contacts or vias 
+- Short circuits 
+- Open circuits 
+- Avoid spending time on complicated net mismatches initially.
+  
+  Many complex LVS errors disappear automatically once the basic errors are corrected.
+
+  
+•	Solve LVS issues step by step rather than trying to debug everything simultaneously.
+Command used to run LVS (Netgen example):
+netgen -batch lvs "file1 circuit1" "file2 circuit2" setup.tcl comp.out >& lvs.log
+
+
+</details>
+
+### PV_D5SK2 - LVS Labs
+
+<details>
+<summary><b>L1 -  LAB1</b></summary>
+
+
+```
+% git clone https://github.com/RTimothyEdwards/vsd_lvs_lab.git
+```
+
+<img width="940" height="373" alt="image" src="https://github.com/user-attachments/assets/b325701d-08a4-4211-bef4-8283a41c84e0" />
+
+
+Even though no circuit is defined in the spice files, netgen will run & get us a lvs report.
+
+
+<img width="940" height="431" alt="image" src="https://github.com/user-attachments/assets/9ec5bf60-c1b5-4c7d-a95e-5152a541e2fe" />
+
+
+<img width="685" height="485" alt="image" src="https://github.com/user-attachments/assets/c913bff0-5d35-4571-8fed-81e6731b5c90" />
+
+
+Now change any pin inside any of the spice files & again run netgen.
+
+
+<img width="940" height="403" alt="image" src="https://github.com/user-attachments/assets/0ad39985-7b03-468e-8524-c77e35de5b0f" />
+
+
+Cell1/2=1, this means that pin 2 (here since the circuit is not defined, netgen will name the pin a name, here it is 1,2,3) of cell1.
+As we can see, there is a mismatch between netB & net C. Net A column is same for both the spice files.
+When comparing net C, we can see cell3/1, means first pin of cell 3 is is connected to net C for netB.spice file. But the same cell3/1 is missing in netA.spice file. This cell3/1 is connected to net B in spice file (look at the Net B column of the netA.spice file). From this we can understand the B & C nets got interchanged. 
+Why it reflects of net A also even though Net A is correct. Because Net A is connected to cell3 also which is corrupted now. So netgen will take netA also in this mismatch highlights. We can ignore the entries where everything matches (just like Net A).
+
+
+<img width="940" height="398" alt="image" src="https://github.com/user-attachments/assets/734c7ef2-23ac-4ecb-91eb-6bf265d9e722" />
+
+
+cell33-> X3 of cell 3
+1=3; 
+1->pin 1 (B)
+3->Fan out of B, here B is connected to 3 different pins.
+Device mismatch is usually difficult to tackle, because it takes the complete fanout of all the respective pins. But the net mismatch which specifically defines, in a specific cell, where are its pins connected to?
+
+
+</details>
+
+
+<details>
+<summary><b>L2 - LVS With Subcircuits</b></summary>
+
+
+After every netgen run type,
+
+```
+% reinitialize
+```
+
+<img width="940" height="187" alt="image" src="https://github.com/user-attachments/assets/a0fa06c2-2bb4-44a0-9c67-a0557331a04a" />
+
+
+For exercise 2, it didn’t recognise as a device, because netgen sub circuit definition won’t take the components inside. It must be called. So netgen will take as 2 empty spice netlists only. So, when these 2 spice files where only a subcircuit definition is provided, it won’t consider it. Now lets provide the subcircuit name which is “test” and see.
+
+
+
+<img width="940" height="568" alt="image" src="https://github.com/user-attachments/assets/d785cee8-56e6-43cd-825d-45d7bc6a2c77" />
+
+
+<img width="940" height="571" alt="image" src="https://github.com/user-attachments/assets/6cf84a46-71db-4cfb-92d1-561483c11eff" />
+
+
+<img width="940" height="649" alt="image" src="https://github.com/user-attachments/assets/bac882cb-ea85-4555-96b1-65f5bbdb8376" />
+
+
+Comparison is made with subcircuit “test” of both the spice netlists.
+Now we can check how pin order will effect the lvs results.
+
+
+<img width="940" height="482" alt="image" src="https://github.com/user-attachments/assets/0d4f27ce-f72b-44da-a526-7f3c0a0f566a" />
+
+
+LVS become clean.
+After swapping all A to C & vice versa, 
+
+
+<img width="940" height="490" alt="image" src="https://github.com/user-attachments/assets/2fddd690-809e-446c-845a-92a89c52f455" />
+
+
+This indicates that it is okay to have port order in an netlist in a different order, but since netgen cannot make any assumptions about the top level the pin names should match.
+Instead of always running the GUI, a batch script can be made to run netgen in batch mode and output the files in a json file with a custom name.
+
+
+```
+%netgen -batch lvs "netA.spice test" "netB.spice test" /usr/local/share/pdk/sky130A/libs.tech/netgen/sky130A_setup.tcl  exercise_2_comp.out -json | tee lvs.log
+```
+
+
+The json file gives a more machine readable file and can be viewed Using
+
+
+```
+../count_lvs.py | tee -a lvs.log
+```
+
+
+<img width="940" height="112" alt="image" src="https://github.com/user-attachments/assets/4e3401b7-47e7-4642-a49c-d987b09cb6ca" />
+
+
+</details>
+
+
+<details>
+<summary><b>L3 - LVS With Blackboxes Subcircuits</b></summary>
+
+
+<img width="940" height="543" alt="image" src="https://github.com/user-attachments/assets/af2329d9-9c71-458e-a313-ae0ec6a6ea00" />
+
+
+Now change the pin order of netA.spice.
+Now try adding an additional pin “D”.
+
+
+<img width="940" height="477" alt="image" src="https://github.com/user-attachments/assets/cb771e63-2713-4a39-be93-806c8159317c" />
+
+
+By changing the port names in cell1 from A B C to A B D and re running we get proxypins. Since these are blackbox circuits netgen assumes that port c is missing in circuitA and D is missing in circuit.
+Netgen assumes that the cell has all pin A B C D and adds the proxy pin to show the missing pin.
+
+
+<img width="940" height="480" alt="image" src="https://github.com/user-attachments/assets/ee98b85f-be38-4513-bb68-f54a6bb1fb43" />
+
+By changing the cell1 to cell 4 in both the definition and the instantiation.
+
+
+We see that cells match and the cells are being flattened. This highlights an issue with black box cells. It cannot recognize when it is a blackbox cell and when it is an empty circuit. 
+
+
+This can be solved by using the -blackbox flag which tells netgen to treat any empty cells as blackbox entries.
+
+```
+$ netgen -batch lvs "netA.spice test" "netB.spice test" \
+  /usr/local/share/pdk/sky130A/libs.tech/netgen/sky130A_setup.tcl \
+  exercise_3_comp.out -json -blackbox | tee lvs.log
+```
+
+
+<img width="940" height="477" alt="image" src="https://github.com/user-attachments/assets/0c30e9c7-db58-4622-b54e-e6e562e58522" />
+
+
+We see how this results in a device count mismatch.Both the cells show up in the same partition .This highlights how even though components in the comp.out file may be aligned but are a complete mismatch.
+
+
+</details>
+
+
+<details>
+<summary><b>L4 - LVS With SPICE Low Level Components</b></summary>
+
+
+Devices have been added inside the subcircuits (.subckt). Since their instance names do not begin with X, they are not subcircuit instances but primitive (low-level) devices such as MOSFETs, resistors, or capacitors. During LVS, some low-level devices, like resistors, have interchangeable (permutable) terminals because swapping their two pins does not change their electrical behavior. Netgen can be configured to recognize these pin permutations so that it does not report false LVS mismatches when the resistor terminals are reversed between the schematic and the layout.
+First copy the tech file to the same directory:
+
+
+```
+cp /usr/share/pdk/sky130A/libs.tech/netgen/sky130A_setup.tcl .Editing the run_lvs.sh script
+```
+
+```
+$ netgen -batch lvs "netA.spice test" "netB.spice test" \
+  sky130A_setup.tcl \
+  exercise_4_comp.out -json | tee lvs.log
+```
+
+
+Apending the following lines to the bottom of sky130A_setup.tcl
+
+```
+permute "-circuit1 cell1" A C
+permute "-circuit2 cell1" A C
+```
+
+
+<img width="940" height="427" alt="image" src="https://github.com/user-attachments/assets/f30edf1f-a423-4990-8e4c-d81bcd0bca48" />
+
+
+Now the circuits match.
+
+
+<img width="940" height="427" alt="image" src="https://github.com/user-attachments/assets/1a7fa771-22bb-4a15-a292-55c4b18a8ecb" />
+
+
+For the diode subckt when pins A and C are swapped both at the port name and low level cells, after running lvs we get no error but the comp.out file highlights how pins A and C have been swapped.
+
+
+</details>
+
+
+<details>
+<summary><b>L5 - LVS For Small Analog Block - Power-On Reset - Part 1</b></summary>
+
+To go inside the block, its “e”, to come back “ctrl+e”
+
+
+```
+->Click netlist option
+```
+
+
+While netlisting, make sure that lvs is a subckt is selected.
+
+
+<img width="940" height="339" alt="image" src="https://github.com/user-attachments/assets/fc325d3f-f37a-4fa4-9b81-5b67592a97b1" />
+
+
+<img width="940" height="444" alt="image" src="https://github.com/user-attachments/assets/c0f54355-b381-4114-8b00-97c33cced868" />
+
+
+Now we have to extract the magic netlist.
+
+
+<img width="940" height="410" alt="image" src="https://github.com/user-attachments/assets/89b9b5c3-db2f-41b4-afb6-db7359923e7b" />
+
+
+<img width="940" height="420" alt="image" src="https://github.com/user-attachments/assets/470ff292-79d0-40bc-a407-1fb647c4c5aa" />
+
+
+<img width="940" height="508" alt="image" src="https://github.com/user-attachments/assets/44077cf4-2c00-4961-8cb1-3a67b767882f" />
+
+
+<img width="940" height="405" alt="image" src="https://github.com/user-attachments/assets/74e2ac71-9a77-4e60-a877-8c44cd396322" />
+
+
+On comparing the netlists using netgen we can see that the issue is with the defination of standard cells, as they are missing in the netlist they are treated as blackbox cells.
+
+
+<img width="940" height="358" alt="image" src="https://github.com/user-attachments/assets/5e3db340-4429-4e4d-975a-260194f93115" />
+
+
+<img width="940" height="501" alt="image" src="https://github.com/user-attachments/assets/207b3889-fb51-4f3e-b095-9e6c88f3e482" />
+
+
+</details>
+
+
+<details>
+<summary><b>L6 - LVS For Small Analog Block - Power-On Reset - Part 2</b></summary>
+
+
+By analyzing the example_por, we observe that the layout netlist has a hierarchical structure:
+
+
+o	Top-level circuit → Parameterized devices → Low-level devices
+
+
+•	In contrast, the schematic netlist has a simpler hierarchy:
+
+
+o	Top-level circuit → Low-level devices
+
+
+•	During LVS, Netgen automatically flattens the hierarchy of both the layout and schematic netlists so that they can be compared on an equivalent basis.
+
+
+•	Netgen is capable of comparing any specified cells (subcircuits) within the schematic and layout netlists, rather than being limited to only the top-level cell.
+
+
+•	Parameterized devices (PCells) in the layout are typically extracted as multiple interconnected primitive (low-level) devices, rather than as a single parameterized device.
+
+
+•	During the LVS process, Netgen automatically flattens these extracted primitive devices, allowing them to be compared with their corresponding schematic representation and ensuring that both implementations are recognized as electrically equivalent.
+
+
+<img width="940" height="249" alt="image" src="https://github.com/user-attachments/assets/95b5684d-f3da-4c60-83de-4f0990e22d8c" />
+
+
+<img width="940" height="416" alt="image" src="https://github.com/user-attachments/assets/65847788-40f0-4385-a449-3aabddf3e2df" />
+
+
+<img width="940" height="440" alt="image" src="https://github.com/user-attachments/assets/6ff45821-afba-43c5-974d-526be55b1286" />
+
+
+i0_analog[4] error, In the .mag file for the circuit we can see the 2 nets are shorted, that can be fixed by adding a resistor (resmet3) on the layer.
+
+
+<img width="940" height="411" alt="image" src="https://github.com/user-attachments/assets/51e977dc-c58c-4d24-926f-70e4f2f5ae89" />
+
+
+<img width="940" height="408" alt="image" src="https://github.com/user-attachments/assets/8d6bb4ed-26a7-48d3-b854-77d6e4ac8e8d" />
+
+
+
+<img width="940" height="401" alt="image" src="https://github.com/user-attachments/assets/f2139961-a08d-4546-9406-0d382b8e90a6" />
+
+
+</details>
+
+
+<details>
+<summary><b>L7 - LVS Layout Vs Verilog For Standard Cell</b></summary>
+
+
+<img width="940" height="496" alt="image" src="https://github.com/user-attachments/assets/cf67e974-2c72-476c-8f98-d68c5637a8da" />
+
+
+<img width="940" height="516" alt="image" src="https://github.com/user-attachments/assets/34ece503-6979-424f-9ab5-fa56df7d99de" />
+
+
+</details>
+
+
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
