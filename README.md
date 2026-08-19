@@ -1,5 +1,3 @@
-# physical_verification_workshop_by_vsd
-
 # Physical Verification Workshop — SKY130 PDK
 
 This repository presents a hands-on **Physical Verification (PV) workshop** based on the open-source **SKY130 Process Design Kit (PDK)**. It provides practical exposure to industry-standard verification methodologies and workflows required to validate an IC layout prior to fabrication and tapeout.
