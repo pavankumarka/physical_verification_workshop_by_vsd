@@ -129,7 +129,11 @@ Eg: poly is selected
 
 <img width="1739" height="937" alt="image" src="https://github.com/user-attachments/assets/bdeac75c-6849-4b4a-84d5-86251156a0f4" />
 
-   
+   6. Press 'e' to edit + maneuver on cell, click mouse button + press 's' to select, in the cmd window type "what" to know the type of material
+
+<img width="1915" height="897" alt="image" src="https://github.com/user-attachments/assets/a7675c97-5440-42e8-b57a-1c73bef50975" />
+
+ 
 -----------------------------------------------------------------------------------------------------------------------------------------
 
 
